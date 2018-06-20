@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "graphdener-backend",
+    "lib",
+]

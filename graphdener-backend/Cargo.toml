@@ -1,0 +1,10 @@
+[package]
+name = "graphdener-backend"
+version = "0.1.0"
+authors = ["orestes"]
+
+[dependencies.indradb-lib]
+lib = {path = "../lib"}
+
+[dependencies]
+time = "0.1"
