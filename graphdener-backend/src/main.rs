@@ -20,9 +20,23 @@ fn import_f(path: &str) -> Result<()>
 	for line in BufReader::new(file).lines()
 	{
 		line_numbers += 1;
+		
 	}
 	println!("Number of lines: {}", line_numbers);
 	Ok(())
+}
+
+fn import_edges(path: &str) -> Result<()>
+{
+	let file = File::open(path)?;
+	let mut edge_count:i32 = 0;
+
+	for line in BufReader::new(file).lines()
+	{
+		edge_count += 1;
+	}
+	Ok(())
+
 }
 
 
