@@ -8,3 +8,4 @@ lib = {path = "../lib"}
 
 [dependencies]
 time = "0.1"
+regex = "1.0.0"
