@@ -9,3 +9,7 @@ lib = {path = "../lib"}
 [dependencies]
 time = "0.1"
 regex = "1.0.0"
+pyo3 = "0.2"
+rmp-rpc = "0.2.0"
+futures = "0.1.21"
+tokio-core = "0.1.17"

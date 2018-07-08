@@ -3,4 +3,5 @@
 members = [
     "graphdener-backend",
     "lib",
+    "pypipe"
 ]
