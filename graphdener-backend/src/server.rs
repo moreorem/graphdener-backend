@@ -33,6 +33,7 @@ impl Service for Echo
             "sum" => Methods::sum(params[0].as_u64().expect("expected u64"), params[1].as_u64().expect("expected u64")),
             "conc" => Methods::concatenate(params[0].as_str().expect("expected str"), params[1].as_str().expect("expected str")),
             "draw" => Methods::draw(params),
+            "import" => Methods::get_filepath(params[0].as_str().expect("expected str")),
             _ => Err("invalid argument".into())
         }
         
@@ -68,10 +69,20 @@ impl Methods
         Ok(c)
     }   
 
-    fn get_filepaths(paths: Vec<String>) -> Result<Value, Value>
+    // Import function to accept filepath TESTING ONLY
+    fn get_filepath(path: &str) -> Result<Value, Value>
     {
-
+        let v: Value = Value::from(path);
+        Ok(v)
     }
+
+    // Improved import function to accept an array of paths
+    fn import_paths(path: &[String]) -> Result<Value, Value>
+    {
+        // let v: Value = Value::from(path);
+        Ok(Value::from(vec![1,2,4]))
+    }
+
     fn concatenate(a: &str, b: &str) -> Result<Value, Value>
     {
         let s: Value = Value::from(a.to_owned() + b);

@@ -61,25 +61,6 @@ fn main()
     // Run the server on the tokio event loop. This is blocking. Press ^C to stop
     core.run(server).unwrap();
 }
-// fn main() -> PyResult<()> {
-// 	let gil = Python::acquire_gil();
-//     let py = gil.python();
-//     let sys = py.import("sys")?;
-//     let version: String = sys.get("version")?.extract()?;
-
-// 	let locals = PyDict::new(py);
-//     locals.set_item("os", py.import("os")?)?;
-//     let user: String = py.eval("os.getenv('USER') or os.getenv('USERNAME')", None, Some(&locals))?.extract()?;
-
-//     println!("Hello {}, I'm Python {}", user, version);
-//     Ok(())
-//     // let a = import_edges("/home/orestes/Workspace/src/github.com/moreorem/graphdener-backend/test.txt");
-//     // println!("{:?}", a);
-//     // println!("{:?}", util::generate_uuid_v1())
-// }
-
-
-
 
 fn import_circles(path: &str) -> Result<()>
 {
@@ -98,7 +79,6 @@ fn import_circles(path: &str) -> Result<()>
 	println!("Number of lines: {}", line_numbers);
 	Ok(())
 }
-
 
 fn import_edges(path: &str) -> Result<()>
 {
