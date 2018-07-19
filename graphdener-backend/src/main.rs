@@ -1,23 +1,20 @@
-extern crate time;
-extern crate indradb;
 extern crate regex;
-extern crate pyo3;
-
 // server.rs externs
+extern crate indradb;
 extern crate futures;
 extern crate rmp_rpc;
 extern crate tokio_core;
+// extern crate serde;
+extern crate uuid;
+extern crate lazy_static;
 
 use server::Echo;
-use futures::future::Ok;
+// use futures::future::Ok;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Result, Error};
-use time::PreciseTime;
-use indradb::util;
+// use time::PreciseTime;
 use regex::Regex;
-use regex::Captures;
-use pyo3::prelude::*;
-
+// use regex::Captures;
 
 use std::net::SocketAddr;
 
@@ -27,6 +24,7 @@ use tokio_core::net::TcpListener;
 use tokio_core::reactor::Core;
 
 mod server;
+// mod endpoints;
 
 enum FileExtension
 {
@@ -101,8 +99,6 @@ fn import_edges(path: &str) -> Result<()>
 		}
 		edge_count += 1;
 
-		util::generate_uuid_v1();
-		// TEST purposes. Stop early
 		if edge_count > 100
 		{
 			break;
