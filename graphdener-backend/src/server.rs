@@ -56,14 +56,18 @@ impl Methods
     // Improved import function to accept an array of paths
     fn import_paths(path: &Vec<Value>) -> Result<Value, Value>
     {
-        let edge_list_path: String = path[0].to_string();
-        println!("Edge list path is: {}", edge_list_path);
+        // Define path of edgelist
+        let edge_list_path = path[0].as_str();
+        // Define path of communities
+        ////////
+        // Count number of paths to import
         let paths_number = path.iter().count();
 
         let msg = format!("{}{}{}", "Imported ", paths_number, " paths");
 
         // Parse file to filehandling function
-        filehandling::import_edges(&edge_list_path);
+        filehandling::import_edges(edge_list_path.unwrap());
+
         Ok(Value::from(msg))
     }
 

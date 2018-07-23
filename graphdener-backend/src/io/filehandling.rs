@@ -1,14 +1,14 @@
 use std::io::{BufRead, BufReader, Result, Error};
-use std::fs::File;
+use std::{fs::File, io};
 use regex::Regex;
 use super::relational::NodeRelations;
 
 
-pub fn import_edges(path: &str) -> Result<()>
+pub fn import_edges(path: &str) -> io::Result<()>
 {
 	println!("Parsing file {}", path);
 
-	let file = File::open(String::from(path))?;
+	let file = File::open(path)?;
 
 	println!("{:?}", file);
 	let mut edge_count:i32 = 0;
@@ -25,16 +25,16 @@ pub fn import_edges(path: &str) -> Result<()>
 		{
 			from_to = (caps.get(1).unwrap().as_str().parse::<i32>().unwrap(), caps.get(2).unwrap().as_str().parse::<i32>().unwrap());
 			nrel.update(from_to);
-       		// TODO: Store each number as int to variables and send them to be created as vertices
-    		// TODO: Make a list with those numbers that correspond to vertex indeces
+    		// TODO: Make a list with those numbers that correspond to vertex indices
     		// TODO: Create instantly that many UUIDs as the max of vertex indices
+    		// TODO: If necessary do calculations for analysis about graph from here
     		// caps.get(1).unwrap().as_str().parse::<i32>();
 		}
 		edge_count += 1;
 		
 	}
 
-	println!("{:?}", nrel.elist);
+	// println!("{:?}", nrel.elist);
 	Ok(())
 }
 
