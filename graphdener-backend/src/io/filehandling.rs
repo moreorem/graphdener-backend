@@ -1,35 +1,40 @@
 use std::io::{BufRead, BufReader, Result, Error};
 use std::fs::File;
 use regex::Regex;
+use super::relational::NodeRelations;
 
 
-fn import_edges(path: &str) -> Result<()>
+pub fn import_edges(path: &str) -> Result<()>
 {
-	let file = File::open(path)?;
+	println!("Parsing file {}", path);
+
+	let file = File::open(String::from(path))?;
+
+	println!("{:?}", file);
 	let mut edge_count:i32 = 0;
 	// Regular expression pattern for edge list
 	let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
-	
+	let mut from_to: (i32, i32);
+
+	let mut nrel = NodeRelations::new();
+	println!("Parsing file {}", path);
+
 	for line in BufReader::new(file).lines()
 	{
 		for caps in re.captures_iter(&String::from(line.unwrap())) 
 		{
-    		println!("Node {} is connected to node {}",
-            		caps.get(1).unwrap().as_str(), caps.get(2).unwrap().as_str()
-            		);
-    		// TODO: Store each number as int to variables and send them to be created as vertices
+			from_to = (caps.get(1).unwrap().as_str().parse::<i32>().unwrap(), caps.get(2).unwrap().as_str().parse::<i32>().unwrap());
+			nrel.update(from_to);
+       		// TODO: Store each number as int to variables and send them to be created as vertices
     		// TODO: Make a list with those numbers that correspond to vertex indeces
     		// TODO: Create instantly that many UUIDs as the max of vertex indices
     		// caps.get(1).unwrap().as_str().parse::<i32>();
 		}
 		edge_count += 1;
-
-		if edge_count > 100
-		{
-			break;
-		}
 		
 	}
+
+	println!("{:?}", nrel.elist);
 	Ok(())
 }
 

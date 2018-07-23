@@ -2,8 +2,8 @@ use rmp_rpc::{Service, Value};
 use std::iter::Iterator;
 use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, Edge, util::generate_uuid_v1};
 use datastoremode::ProxyDatastore;
+use io::filehandling;
 use statics;
-use uuid::Uuid;
 
 // Our server type
 #[derive(Clone)]
@@ -61,6 +61,9 @@ impl Methods
         let paths_number = path.iter().count();
 
         let msg = format!("{}{}{}", "Imported ", paths_number, " paths");
+
+        // Parse file to filehandling function
+        filehandling::import_edges(&edge_list_path);
         Ok(Value::from(msg))
     }
 
