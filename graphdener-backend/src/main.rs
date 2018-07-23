@@ -4,27 +4,25 @@ extern crate indradb;
 extern crate futures;
 extern crate rmp_rpc;
 extern crate tokio_core;
-// extern crate serde;
-extern crate uuid;
+
+#[macro_use]
 extern crate lazy_static;
+extern crate serde_json;
+extern crate uuid;
 
 use server::Echo;
-// use futures::future::Ok;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Result, Error};
-// use time::PreciseTime;
-use regex::Regex;
-// use regex::Captures;
 
 use std::net::SocketAddr;
 
 use futures::Stream;
-use rmp_rpc::{serve, Service, Value};
+use rmp_rpc::serve;
 use tokio_core::net::TcpListener;
 use tokio_core::reactor::Core;
 
 mod server;
-// mod endpoints;
+mod statics;
+mod datastoremode;
+mod io;
 
 enum FileExtension
 {
@@ -60,62 +58,3 @@ fn main()
     core.run(server).unwrap();
 }
 
-fn import_circles(path: &str) -> Result<()>
-{
-	let file = File::open(path)?;
-	let mut line_numbers:i32 = 0;
-	// Regular expression pattern for circles
-	let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
-
-
-	for line in BufReader::new(file).lines()
-	{
-
-		line_numbers += 1;
-		
-	}
-	println!("Number of lines: {}", line_numbers);
-	Ok(())
-}
-
-fn import_edges(path: &str) -> Result<()>
-{
-	let file = File::open(path)?;
-	let mut edge_count:i32 = 0;
-	// Regular expression pattern for edge list
-	let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
-	
-	for line in BufReader::new(file).lines()
-	{
-		for caps in re.captures_iter(&String::from(line.unwrap())) 
-		{
-    		println!("Node {} is connected to node {}",
-            		caps.get(1).unwrap().as_str(), caps.get(2).unwrap().as_str()
-            		);
-    		// TODO: Store each number as int to variables and send them to be created as vertices
-    		// TODO: Make a list with those numbers that correspond to vertex indeces
-    		// TODO: Create instantly that many UUIDs as the max of vertex indices
-    		// caps.get(1).unwrap().as_str().parse::<i32>();
-		}
-		edge_count += 1;
-
-		if edge_count > 100
-		{
-			break;
-		}
-		
-	}
-	Ok(())
-}
-
-
-#[cfg(test)]
-mod tests
-{
-	use super::*;
-
-	#[test]
-	fn read_speed()
-	{
-	}
-}

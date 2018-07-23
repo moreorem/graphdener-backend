@@ -1,6 +1,6 @@
 use indradb::{
     Datastore, Edge, EdgeDirection, EdgeKey, EdgeMetadata, EdgeQuery, Error, MemoryDatastore, MemoryTransaction,
- Transaction, RocksdbDatastore,Type, Vertex, VertexMetadata, VertexQuery,
+    RocksdbDatastore, RocksdbTransaction, Transaction, Type, Vertex, VertexMetadata, VertexQuery, 
 };
 use serde_json::Value as JsonValue;
 /// This module exposes a proxy datastore and transaction that in turn call

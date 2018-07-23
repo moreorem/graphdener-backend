@@ -1,7 +1,9 @@
 use rmp_rpc::{Service, Value};
 use std::iter::Iterator;
-use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type};
-
+use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, Edge, util::generate_uuid_v1};
+use datastoremode::ProxyDatastore;
+use statics;
+use uuid::Uuid;
 
 // Our server type
 #[derive(Clone)]
@@ -21,10 +23,11 @@ impl Service for Echo
         match method 
         {
             "sum" => Methods::sum(params[0].as_u64().expect("expected u64"), params[1].as_u64().expect("expected u64")),
-            "conc" => Methods::concatenate(params[0].as_str().expect("expected str"), params[1].as_str().expect("expected str")),
             "import" => Methods::import_paths(params[0].as_array().expect("expected array")),
             "init" => Methods::initialize(params[0].as_str().expect("expected str")), //TODO receive trigger of choice from client
             "c_vert" => Methods::create_vertex(),
+            "c_edge" => Methods::load_edges(),
+
             _ => Err("invalid argument".into())
         }
         
@@ -56,31 +59,24 @@ impl Methods
         let edge_list_path: String = path[0].to_string();
         println!("Edge list path is: {}", edge_list_path);
         let paths_number = path.iter().count();
+
         let msg = format!("{}{}{}", "Imported ", paths_number, " paths");
         Ok(Value::from(msg))
-    }
-
-    fn concatenate(a: &str, b: &str) -> Result<Value, Value>
-    {
-        let s: Value = Value::from(a.to_owned() + b);
-        Ok(s)
     }
 
     fn initialize(datastore_type: &str) -> Result<Value, Value>
     {
         let msg = "hello";
         println!("Initializing database...");
-        // let mut db: dbt;
-        let dbtype = match datastore_type { 
-            "rocksdb" => DatastoreType::RocksDB, 
-            _ => DatastoreType::Memory
-        }; 
-
-        if let DatastoreType::RocksDB = dbtype {
-            let db = &RocksdbDatastore::new("localhost:8888", Some(5));
+       
+        if datastore_type == "rocksdb" {
+            let datastore = RocksdbDatastore::new("localhost:8888", Some(5))
+                            .expect("Expected to be able to create a RocksDB datastore");
+            ProxyDatastore::Rocksdb(datastore);
         }
         else {
-            let db = &MemoryDatastore::default();
+            let datastore = MemoryDatastore::default();
+            ProxyDatastore::Memory(datastore);
         }
 
         Ok(Value::from(msg))
@@ -88,28 +84,33 @@ impl Methods
 
     fn create_vertex() -> Result<Value, Value>
     {
-        let msg = "";
         println!("Creating vertex...");
-        let mut db = MemoryDatastore::default();
-        let trans = db.transaction().unwrap();
+        let trans = statics::DATASTORE.transaction().unwrap();
 
-        trans.create_vertex_from_type(Type::new("egg".to_string()).unwrap());
-        println!("{:?}", trans);
-        Ok(Value::from(msg))
+        let msg = trans.create_vertex_from_type(Type::new("egg".to_string()).unwrap());
+        Ok(Value::from(msg.unwrap().to_string()))
     }
 
-}
+    fn load_edges() -> Result<Value, Value>
+    {
+        println!("Creating edge...");
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let edge_list_available: bool;
 
-enum DatastoreType
-{
-    Memory,
-    RocksDB
-}
+        // If there is an edge list or map imported
+        // if edge_list_available
+        // {
 
-struct Dbase
-{
-    mem: MemoryDatastore,
-    roc: RocksdbDatastore
+        // }
+        let uuid_from = generate_uuid_v1(); // TESTING
+        let uuid_to = generate_uuid_v1(); // TESTING
+        let e = EdgeKey::new(uuid_from, Type::new("ege".to_string()).unwrap(), uuid_to);
+        // Edge::new(e);
+        let msg = trans.create_edge(&e);
+
+        Ok(Value::from("msg.as_str()"))
+    }
+
 }
 
 

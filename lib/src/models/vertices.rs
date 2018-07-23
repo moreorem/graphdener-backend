@@ -14,6 +14,9 @@ pub struct Vertex {
     /// The type of the vertex.
     #[serde(rename = "type")]
     pub t: Type,
+
+    // NEW, add x,y positions in the surface
+    pub pos: (f64, f64),
 }
 
 impl Vertex {
@@ -36,7 +39,7 @@ impl Vertex {
     /// * `id` - The id of the vertex.
     /// * `t` - The type of the vertex.
     pub fn with_id(id: Uuid, t: Type) -> Self {
-        Vertex { id: id, t: t }
+        Vertex { id: id, t: t, pos: (0.,0.) }
     }
 }
 
