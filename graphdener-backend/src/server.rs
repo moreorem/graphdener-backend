@@ -5,6 +5,7 @@ use datastoremode::ProxyDatastore;
 use io::filehandling;
 use statics;
 
+
 // Our server type
 #[derive(Clone)]
 pub struct Echo;
@@ -22,12 +23,12 @@ impl Service for Echo
     {
         match method 
         {
-            "sum" => Methods::sum(params[0].as_u64().expect("expected u64"), params[1].as_u64().expect("expected u64")),
+            "get_pos" => Methods::get_positions(),
             "import" => Methods::import_paths(params[0].as_array().expect("expected array")),
             "init" => Methods::initialize(params[0].as_str().expect("expected str")), //TODO receive trigger of choice from client
-            "c_vert" => Methods::create_vertex(),
+            "c_vert" => Methods::create_vertex(params[0].as_str().expect("expected str")),
             "c_edge" => Methods::load_edges(),
-
+            "get_conns" => Methods::get_connections(),
             _ => Err("invalid argument".into())
         }
         
@@ -47,12 +48,6 @@ struct Methods;
 
 impl Methods
 {
-    fn sum(a: u64, b: u64) -> Result<Value, Value>
-    {
-        let c: Value = Value::from(a + b);
-        Ok(c)
-    }   
-
     // Improved import function to accept an array of paths
     fn import_paths(path: &Vec<Value>) -> Result<Value, Value>
     {
@@ -89,12 +84,13 @@ impl Methods
         Ok(Value::from(msg))
     }
 
-    fn create_vertex() -> Result<Value, Value>
+    fn create_vertex(v_type: &str) -> Result<Value, Value>
     {
         println!("Creating vertex...");
         let trans = statics::DATASTORE.transaction().unwrap();
 
-        let msg = trans.create_vertex_from_type(Type::new("egg".to_string()).unwrap());
+        let msg = trans.create_vertex_from_type(Type::new(v_type.to_string()).unwrap());
+        
         Ok(Value::from(msg.unwrap().to_string()))
     }
 
@@ -116,6 +112,20 @@ impl Methods
         let msg = trans.create_edge(&e);
 
         Ok(Value::from("msg.as_str()"))
+    }
+
+    fn get_positions() -> Result<Value, Value>
+    {
+        // Returns x,y positions for every node in the graph
+        Ok(Value::from("test"))
+    }
+
+    fn get_connections() -> Result<Value, Value>
+    {
+        // Returns the edge list, adjacency matrix or adjacency list in order to draw the graph
+        
+        Ok(Value::from("test"))
+
     }
 
 }

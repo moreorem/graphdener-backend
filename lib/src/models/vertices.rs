@@ -41,6 +41,7 @@ impl Vertex {
     pub fn with_id(id: Uuid, t: Type) -> Self {
         Vertex { id: id, t: t, pos: (0.,0.) }
     }
+
 }
 
 impl PartialEq for Vertex {

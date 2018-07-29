@@ -2,7 +2,7 @@ use std::io::{BufRead, BufReader, Result, Error};
 use std::{fs::File, io};
 use regex::Regex;
 use super::relational::NodeRelations;
-
+use uuid::Uuid;
 
 pub fn import_edges(path: &str) -> io::Result<()>
 {
@@ -16,7 +16,7 @@ pub fn import_edges(path: &str) -> io::Result<()>
 	let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
 	let mut from_to: (i32, i32);
 
-	let mut nrel = NodeRelations::new();
+	let mut relation_table = NodeRelations::new();
 	println!("Parsing file {}", path);
 
 	for line in BufReader::new(file).lines()
@@ -24,17 +24,16 @@ pub fn import_edges(path: &str) -> io::Result<()>
 		for caps in re.captures_iter(&String::from(line.unwrap())) 
 		{
 			from_to = (caps.get(1).unwrap().as_str().parse::<i32>().unwrap(), caps.get(2).unwrap().as_str().parse::<i32>().unwrap());
-			nrel.update(from_to);
+			relation_table.update(from_to);
+			// TODO: Create Vertex Uuids and edges concurrently
     		// TODO: Make a list with those numbers that correspond to vertex indices
     		// TODO: Create instantly that many UUIDs as the max of vertex indices
     		// TODO: If necessary do calculations for analysis about graph from here
-    		// caps.get(1).unwrap().as_str().parse::<i32>();
 		}
 		edge_count += 1;
 		
 	}
 
-	// println!("{:?}", nrel.elist);
 	Ok(())
 }
 
