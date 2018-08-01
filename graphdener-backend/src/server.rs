@@ -1,8 +1,8 @@
 use rmp_rpc::{Service, Value};
 use std::iter::Iterator;
-use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, Edge, util::generate_uuid_v1};
+use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, util::generate_uuid_v1};
 use datastoremode::ProxyDatastore;
-use io::filehandling;
+use io::{filehandling, relational};
 use statics;
 
 
@@ -57,7 +57,7 @@ impl Methods
         ////////
         // Count number of paths to import
         let paths_number = path.iter().count();
-
+        
         let msg = format!("{}{}{}", "Imported ", paths_number, " paths");
 
         // Parse file to filehandling function
@@ -86,12 +86,13 @@ impl Methods
 
     fn create_vertex(v_type: &str) -> Result<Value, Value>
     {
-        println!("Creating vertex...");
-        let trans = statics::DATASTORE.transaction().unwrap();
+        relational::create_vertex
+        // println!("Creating vertex...");
+        // let trans = statics::DATASTORE.transaction().unwrap();
 
-        let msg = trans.create_vertex_from_type(Type::new(v_type.to_string()).unwrap());
+        // let msg = trans.create_vertex_from_type(Type::new(v_type.to_string()).unwrap());
         
-        Ok(Value::from(msg.unwrap().to_string()))
+        // Ok(Value::from(msg.unwrap().to_string()))
     }
 
     fn load_edges() -> Result<Value, Value>
