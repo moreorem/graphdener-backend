@@ -1,11 +1,9 @@
 use std::io::{BufRead, BufReader, Result, Error};
 use std::{fs::File, io};
 use regex::Regex;
-use super::relational::NodeRelations;
-use uuid::Uuid;
-use std::collections::HashMap;
+use io::relations::NodeRelations;
 
-pub fn import_edges(path: &str) -> io::Result<NodeRelations>
+pub fn import_edges(path: &str) -> io::Result<bool>
 {
 	println!("Parsing file {}", path);
 
@@ -19,10 +17,6 @@ pub fn import_edges(path: &str) -> io::Result<NodeRelations>
 
 	let mut relation_table = NodeRelations::new();
 	println!("Parsing file {}", path);
-
-	// let mut id_uuid_table = HashMap::new();
-
-
 
 	for line in BufReader::new(file).lines()
 	{
@@ -45,12 +39,13 @@ pub fn import_edges(path: &str) -> io::Result<NodeRelations>
 
 	}
 	relation_table.generate_id_map();
+	relation_table.create_vert_edges(Some(&String::from("pea")));
 
-	Ok(relation_table)
+	Ok(true)
 }
 
 
-fn import_circles(path: &str) -> Result<()>
+fn import_circles(path: &str) -> Result<bool>
 {
 	let file = File::open(path)?;
 	let mut line_numbers:i32 = 0;
@@ -65,6 +60,10 @@ fn import_circles(path: &str) -> Result<()>
 		
 	}
 	println!("Number of lines: {}", line_numbers);
-	Ok(())
+	Ok(true)
 }
 
+fn import_communities(path: &str) -> Result<bool>
+{
+	Ok(true)
+}

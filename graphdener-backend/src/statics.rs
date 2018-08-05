@@ -1,4 +1,4 @@
-use datastoremode::{datastore, ProxyDatastore};
+use datastore::{datastore, ProxyDatastore};
 
 lazy_static! {
     /// The underlying datastore

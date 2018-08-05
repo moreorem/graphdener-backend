@@ -1,2 +1,2 @@
 pub mod filehandling;
-pub mod relational;
+pub mod relations;

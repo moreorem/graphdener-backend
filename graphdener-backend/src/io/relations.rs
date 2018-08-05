@@ -2,7 +2,7 @@ use indradb::util::generate_uuid_v1;
 use uuid::Uuid;
 use std::collections::HashMap;
 use indradb::util;
-use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, Vertex};
+use indradb::{Datastore, Transaction, Type, Edge, EdgeKey, Vertex};
 use statics;
 
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
@@ -78,20 +78,37 @@ impl NodeRelations
 		Ok("Id to Uuid mapping created")
 	}
 
-	fn create_vert_edges(&self, vertex_type: Option<&String>) -> ()
+	pub fn create_vert_edges(&self, vertex_type: Option<&String>) -> ()
 	{
         println!("Creating edge...");
         let trans = statics::DATASTORE.transaction().unwrap();
+        let mut v: Vertex;
+        let mut e: EdgeKey;
 
-        // TODO repeat for every node in the list
-        let v = Vertex::with_id(*self.uuid_map.get(&1).unwrap(), Type::new(vertex_type
-        													.unwrap_or(&String::from("unknown"))
-														    .to_string())
-														    .unwrap());
-        let msg = trans.create_vertex(&v);
-        println!("{:?}", msg);
-        	
+        for pair in self.edge_list.iter()
+        {
+        	println!("{:?}", pair);
+	        let uuid_from = self.uuid_map.get(&pair.0).unwrap();
+	        let uuid_to = self.uuid_map.get(&pair.1).unwrap();
+        	println!("{:?} - {:?}", uuid_from, uuid_to);
 
+	        // TODO repeat for every node in the list
+	        v = Vertex::with_id(*self.uuid_map.get(&1).unwrap(), Type::new(vertex_type
+	        													.unwrap_or(&String::from("unknown"))
+															    .to_string())
+															    .unwrap());
+	        let msg = trans.create_vertex(&v);
+
+	        println!("{:?}", v);
+
+	        // let edge_type = Type::new(String::from("unknown")).unwrap();
+	        // e = EdgeKey::new(*uuid_from, edge_type, *uuid_to);
+
+	        // trans.create_edge(&e);
+			let msg = trans.get_vertex_count();
+	        println!("{:?}", msg);
+
+	    }
 	}
 
 	fn get_type(&self) -> &str

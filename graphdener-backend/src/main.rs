@@ -21,8 +21,9 @@ use tokio_core::reactor::Core;
 
 mod server;
 mod statics;
-mod datastoremode;
+mod datastore;
 mod io;
+mod commands;
 
 enum FileExtension
 {
