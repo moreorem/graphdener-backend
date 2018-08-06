@@ -1,16 +1,22 @@
 use rmp_rpc::Value;
-use io::{filehandling, relations};
-use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, util::generate_uuid_v1};
+use io::filehandling;
+use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, VertexQuery, Vertex, util::generate_uuid_v1};
 use datastore::ProxyDatastore;
 use statics;
 use std::iter::Iterator;
+use uuid::Uuid;
 
 
+// enum info_tables
+// {
+//     type1(relations::NodeRelations)
+// }
 // Here declare the functions that are going to be executed on the server
 pub struct Commands;
 
 impl Commands
 {
+
     // Improved import function to accept an array of paths
     pub fn import_paths(path: &Vec<Value>) -> Result<Value, Value>
     {
@@ -25,6 +31,7 @@ impl Commands
 
         // Parse file to filehandling function
         filehandling::import_edges(edge_list_path.unwrap());
+        
 
         Ok(Value::from(msg))
     }
@@ -78,10 +85,57 @@ impl Commands
         Ok(Value::from("msg.as_str()"))
     }
 
+    // 
     pub fn get_positions() -> Result<Value, Value>
     {
         // Returns x,y positions for every node in the graph
         Ok(Value::from("test"))
+    }
+
+
+    // Returns a set or all of the vertices that exist in the database to the frontend
+    pub fn get_vertex(v_id: &[Value]) -> Result<Value, Value>
+    {
+        println!("{:?}", v_id);
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let v: VertexQuery;
+        let mut v_id_list: Vec<Uuid> = vec!();
+
+        for item in v_id.iter()
+        {
+            v_id_list.push(<Uuid>::parse_str(item.as_str().unwrap()).unwrap());
+        }
+
+        println!("{:#?}", v_id_list);
+
+        if v_id.len() > 0
+        {
+            // for item in v_id.iter()
+            //                 .map(|item| { <Uuid>::parse_str(item.as_str()).unwrap() } )
+            // {}
+            
+            v = VertexQuery::Vertices{ ids: v_id_list };
+            println!("many uuids");
+            // for item in v_id.into_iter().enumerate()
+            // {
+            //     v_id[0].as_str();
+            // }
+            // v = VertexQuery::Vertices{ids: <Uuid>::parse_str(v_id).unwrap()};
+
+        }
+        else
+        {
+            v = VertexQuery::All{start_id: None, limit: 100};
+            println!("all vertices");
+        }
+        
+        // In this case the msg variable is of type model::Vertex. It has to be broken into the struct items to be used
+        let msg = trans.get_vertices(&v);
+        let a = msg.unwrap()[0].pos; //TEST
+
+        println!("GetNodes{:#?}", a);
+
+        Ok(Value::Array(vec!(Value::from(a[0]), Value::from(a[1]))))
     }
 
     pub fn get_connections() -> Result<Value, Value>

@@ -22,21 +22,6 @@ pub struct NodeRelations
 
 }
 
-// Imported Ids and corresponding Uuids
-pub struct IdUuid
-{
-	id: u32,
-}
-
-impl IdUuid
-{
-	fn new(&self, nd: &NodeRelations) -> u32
-	{
-
-		3
-	}
-}
-
 
 impl NodeRelations
 {
@@ -48,24 +33,22 @@ impl NodeRelations
 	pub fn update(&mut self, conn: (u32, u32) )
 	{
 		self.edge_list.push(conn);
-
-	
 	}
 
 	// create a map to translate imported ids into uuids
 	pub fn generate_id_map(&mut self) -> Result<&str, &str> //Vec<(u32, Uuid)>
 	{
 		let mut a: Vec<u32> = vec!();
-		let mut b: Vec<u32> = vec!();
+		// let mut b: Vec<u32> = vec!();
 
 		for tup in self.edge_list.iter()
 		{
 			a.push(tup.0);
-			b.push(tup.1);
+			a.push(tup.1);
 		}
 
 		// probably would be faster if map function is used
-		a.append(&mut b);
+		// a.append(&mut b);
 		a.sort();
 		a.dedup();
 
@@ -93,7 +76,8 @@ impl NodeRelations
         	println!("{:?} - {:?}", uuid_from, uuid_to);
 
 	        // TODO repeat for every node in the list
-	        v = Vertex::with_id(*self.uuid_map.get(&1).unwrap(), Type::new(vertex_type
+	        // TODO try serializing all queries in one transaction
+	        v = Vertex::with_id(*self.uuid_map.get(&pair.0).unwrap(), Type::new(vertex_type
 	        													.unwrap_or(&String::from("unknown"))
 															    .to_string())
 															    .unwrap());

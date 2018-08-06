@@ -2,6 +2,7 @@ use std::io::{BufRead, BufReader, Result, Error};
 use std::{fs::File, io};
 use regex::Regex;
 use io::relations::NodeRelations;
+use statics;
 
 pub fn import_edges(path: &str) -> io::Result<bool>
 {
@@ -16,6 +17,7 @@ pub fn import_edges(path: &str) -> io::Result<bool>
 	let mut from_to: (u32, u32);
 
 	let mut relation_table = NodeRelations::new();
+
 	println!("Parsing file {}", path);
 
 	for line in BufReader::new(file).lines()
