@@ -78,16 +78,9 @@ impl Commands
         Ok(Value::from("msg.as_str()"))
     }
 
-    // 
-    pub fn get_positions() -> Result<Value, Value>
-    {
-        // Returns x,y positions for every node in the graph
-        Ok(Value::from("test"))
-    }
-
-
-    // Returns a set or all of the vertices that exist in the database to the frontend
-    pub fn get_vertex(v_id: &[Value]) -> Result<Value, Value>
+  
+    // Returns specific info about a set or all of the vertices that exist in the database to the frontend
+    pub fn get_vertex(v_id: &[Value], info_type: &str) -> Result<Value, Value>
     {
         println!("{:?}", v_id);
         let trans = statics::DATASTORE.transaction().unwrap();
@@ -123,13 +116,35 @@ impl Commands
         }
         
         // In this case the msg variable is of type model::Vertex. It has to be broken into the struct items to be used
-        let msg = trans.get_vertices(&v);
-        let a = msg.unwrap()[0].pos; //TEST
+        let response = trans.get_vertices(&v).unwrap();
+        
 
-        println!("GetNodes{:#?}", a);
+        Ok(Commands::vert_info(info_type, response))
 
-        Ok(Value::Array(vec!(Value::from(a[0]), Value::from(a[1]))))
+
     }
+
+
+
+    fn vert_info(info_type: &str, response: Vec<Vertex>) -> Value
+    {
+        // map all of the vectors in the response to one vector
+        let r_iter = response.iter();
+        // let info_vec: Vec<_> = r_iter.map(|x| Value::Array([Value::from(x.pos[0]), Value::from(x.pos[1])].to_vec()) ).collect();
+        let r_type = response.iter();
+
+
+        match info_type
+        {
+            "position" => Value::Array(r_iter.map(|x| Value::Array([Value::from(x.pos[0]), Value::from(x.pos[1])].to_vec()) ).collect() ) ,
+            "type" => Value::Array(  r_type.map( |x| Value::from(x.t.0.to_owned()) ).collect() ),
+            _ => Value::from("error")
+
+        }
+    }
+
+
+
 
     pub fn get_connections() -> Result<Value, Value>
     {

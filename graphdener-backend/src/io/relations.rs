@@ -30,10 +30,13 @@ impl NodeRelations
 		// let el =  elist ;
 		NodeRelations { edge_list: Vec::new(), representation_type: ReprMethod::EdgeList, uuid_map: HashMap::new() }
 	}
+
+
 	pub fn update(&mut self, conn: (u32, u32) )
 	{
 		self.edge_list.push(conn);
 	}
+
 
 	// create a map to translate imported ids into uuids
 	pub fn generate_id_map(&mut self) -> Result<&str, &str> //Vec<(u32, Uuid)>
@@ -59,39 +62,35 @@ impl NodeRelations
 		Ok("Id to Uuid mapping created")
 	}
 
-	pub fn create_vert_edges(&self, vertex_type: Option<&String>) -> ()
+
+	pub fn create_vertices(&self, vertex_type: Option<&String>) -> ()
 	{
-        println!("Creating edge...");
+        println!("Storing vertices to database...");
         let trans = statics::DATASTORE.transaction().unwrap();
         let mut v: Vertex;
         let mut e: EdgeKey;
 
-        for pair in self.edge_list.iter()
-        {
-        	println!("{:?}", pair);
-	        let uuid_from = self.uuid_map.get(&pair.0).unwrap();
-	        let uuid_to = self.uuid_map.get(&pair.1).unwrap();
-        	println!("{:?} - {:?}", uuid_from, uuid_to);
+        let mut uuid_list: Vec<&Uuid> = Vec::new();
 
-	        // TODO repeat for every node in the list
-	        // TODO try serializing all queries in one transaction
-	        v = Vertex::with_id(*self.uuid_map.get(&pair.0).unwrap(), Type::new(vertex_type
-	        													.unwrap_or(&String::from("unknown"))
-															    .to_string())
-															    .unwrap());
-	        let msg = trans.create_vertex(&v);
+        // iterate over every uuid in the hashmap and create each unique node into the db
+        for val in self.uuid_map.values()
+        {
+        	uuid_list.push(val);
+        	v = Vertex::with_id(*val, Type::new(vertex_type
+												.unwrap_or(&String::from("unknown"))
+											    .to_string())
+											    .unwrap());
+
+        	let msg = trans.create_vertex(&v);
 
 	        println!("{:?}", v);
 
-	        // let edge_type = Type::new(String::from("unknown")).unwrap();
-	        // e = EdgeKey::new(*uuid_from, edge_type, *uuid_to);
+        }
 
-	        // trans.create_edge(&e);
-			let msg = trans.get_vertex_count();
-	        println!("{:?}", msg);
-
-	    }
+		let msg = trans.get_vertex_count();
+        println!("{:?}", msg);
 	}
+
 
 	fn get_type(&self) -> &str
 	{
@@ -103,7 +102,36 @@ impl NodeRelations
 		}
 	}
 
-	
+
+	// UNFINISHED
+	pub fn create_edges() -> ()
+	{
+		 // for pair in self.edge_list.iter()
+        // {
+        // 	println!("{:?}", pair);
+	       //  let uuid_from = self.uuid_map.get(&pair.0).unwrap();
+	       //  let uuid_to = self.uuid_map.get(&pair.1).unwrap();
+        // 	println!("{:?} - {:?}", uuid_from, uuid_to);
+
+	        // TODO repeat for every node in the list
+	        // TODO try serializing all queries in one transaction
+	        // v = Vertex::with_id(uuid_list,
+
+
+
+	        // 	*self.uuid_map.get(&pair.0).unwrap(), Type::new(vertex_type
+	        // 													.unwrap_or(&String::from("unknown"))
+									// 						    .to_string())
+									// 						    .unwrap());
+	        
+
+	        // let edge_type = Type::new(String::from("unknown")).unwrap();
+	        // e = EdgeKey::new(*uuid_from, edge_type, *uuid_to);
+
+	        // trans.create_edge(&e);
+	    
+	    // }
+	}
 }
 
 // Combine information about vertex connections and x,y positions and create a list of tuples that contain 

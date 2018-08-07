@@ -37,7 +37,7 @@ pub fn import_edges(path: &str) -> io::Result<bool>
 
 	}
 	relation_table.generate_id_map();
-	relation_table.create_vert_edges(Some(&String::from("pea")));
+	relation_table.create_vertices(Some(&String::from("ego")));
 
 	Ok(true)
 }
