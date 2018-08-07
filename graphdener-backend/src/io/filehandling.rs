@@ -27,10 +27,6 @@ pub fn import_edges(path: &str) -> io::Result<bool>
 			from_to = (caps.get(1).unwrap().as_str().parse::<u32>().unwrap(), caps.get(2).unwrap().as_str().parse::<u32>().unwrap());
 			relation_table.update(from_to);
 
-
-			// add id.0 and id.1 to map if they don't exist
-			// id_uuid_table.insert(from_to.0, next_uuid());
-
 			// TODO: Create Vertex Uuids and edges concurrently
     		// TODO: Make a list with those numbers that correspond to vertex indices
     		// TODO: Create instantly that many UUIDs as the max of vertex indices

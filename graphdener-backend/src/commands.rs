@@ -7,10 +7,6 @@ use std::iter::Iterator;
 use uuid::Uuid;
 
 
-// enum info_tables
-// {
-//     type1(relations::NodeRelations)
-// }
 // Here declare the functions that are going to be executed on the server
 pub struct Commands;
 
@@ -22,8 +18,10 @@ impl Commands
     {
         // Define path of edgelist
         let edge_list_path = path[0].as_str();
+
         // Define path of communities
-        ////////
+        // -------------------------
+
         // Count number of paths to import
         let paths_number = path.iter().count();
         
@@ -71,11 +69,6 @@ impl Commands
         let trans = statics::DATASTORE.transaction().unwrap();
         let edge_list_available: bool;
 
-        // If there is an edge list or map imported
-        // if edge_list_available
-        // {
-
-        // }
         let uuid_from = generate_uuid_v1(); // TESTING
         let uuid_to = generate_uuid_v1(); // TESTING
         let e = EdgeKey::new(uuid_from, Type::new("ege".to_string()).unwrap(), uuid_to);
@@ -99,7 +92,7 @@ impl Commands
         println!("{:?}", v_id);
         let trans = statics::DATASTORE.transaction().unwrap();
         let v: VertexQuery;
-        let mut v_id_list: Vec<Uuid> = vec!();
+        let mut v_id_list: Vec<Uuid> = Vec::new();
 
         for item in v_id.iter()
         {
@@ -141,7 +134,6 @@ impl Commands
     pub fn get_connections() -> Result<Value, Value>
     {
         // Returns the edge list, adjacency matrix or adjacency list in order to draw the graph
-        
         Ok(Value::from("test"))
 
     }

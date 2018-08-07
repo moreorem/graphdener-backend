@@ -5,7 +5,6 @@ use commands::Commands;
 #[derive(Clone)]
 pub struct Echo;
 
-
 // The Service trait defines how the server handles incoming requests and notifications.
 impl Service for Echo 
 {

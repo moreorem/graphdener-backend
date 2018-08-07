@@ -28,7 +28,7 @@ impl NodeRelations
 	pub fn new() -> NodeRelations
 	{
 		// let el =  elist ;
-		NodeRelations { edge_list: vec!(), representation_type: ReprMethod::EdgeList, uuid_map: HashMap::new() }
+		NodeRelations { edge_list: Vec::new(), representation_type: ReprMethod::EdgeList, uuid_map: HashMap::new() }
 	}
 	pub fn update(&mut self, conn: (u32, u32) )
 	{
@@ -38,17 +38,15 @@ impl NodeRelations
 	// create a map to translate imported ids into uuids
 	pub fn generate_id_map(&mut self) -> Result<&str, &str> //Vec<(u32, Uuid)>
 	{
-		let mut a: Vec<u32> = vec!();
-		// let mut b: Vec<u32> = vec!();
+		let mut a: Vec<u32> = Vec::new();
 
-		for tup in self.edge_list.iter()
+		for tup in &self.edge_list
 		{
 			a.push(tup.0);
 			a.push(tup.1);
 		}
 
 		// probably would be faster if map function is used
-		// a.append(&mut b);
 		a.sort();
 		a.dedup();
 
@@ -104,13 +102,6 @@ impl NodeRelations
 			ReprMethod::AdjList => "Adjacency List"
 		}
 	}
-
-	// fn get_edges(&self) -> Vec<(i32, i32)>
-	// {
-	// 	self.edge_list
-
-
-	// }
 
 	
 }
