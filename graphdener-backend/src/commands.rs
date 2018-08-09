@@ -51,16 +51,16 @@ impl Commands
         Ok(Value::from(msg))
     }
 
-    pub fn create_vertex(v_type: &str) -> Result<Value, Value>
-    {
-        // relational::create_vertex
-        println!("Creating vertex...");
-        // let trans = statics::DATASTORE.transaction().unwrap();
+    // pub fn create_vertex(v_type: &str) -> Result<Value, Value>
+    // {
+    //     // relational::create_vertex
+    //     println!("Creating vertex...");
+    //     // let trans = statics::DATASTORE.transaction().unwrap();
 
-        let msg = String::from("ok");
+    //     let msg = String::from("ok");
         
-        Ok(Value::from(msg.to_string()))
-    }
+    //     Ok(Value::from(msg.to_string()))
+    // }
 
   
     // Returns specific info about a set or all of the vertices that exist in the database to the frontend
