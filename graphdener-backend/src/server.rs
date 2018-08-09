@@ -15,6 +15,7 @@ impl Service for Echo
     // Define how the server handle requests.
     fn handle_request(&mut self, method: &str, params: &[Value]) -> Self::RequestFuture 
     {
+        // Call the proper command according to the input trigger from the frontend
         match method 
         {
             "import" => Commands::import_paths(params[0].as_array().expect("expected array")),

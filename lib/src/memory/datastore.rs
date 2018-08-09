@@ -285,6 +285,7 @@ impl Transaction for MemoryTransaction {
     fn create_vertex(&self, vertex: &models::Vertex) -> Result<bool> {
         let mut datastore = self.datastore.write().unwrap();
 
+        // Check if uuid exists. If not then store input in memory
         if datastore.vertices.contains_key(&vertex.id) {
             Ok(false)
         } else {
@@ -297,10 +298,10 @@ impl Transaction for MemoryTransaction {
         let vertex_values = self.datastore
             .read()
             .unwrap()
-            .get_vertex_values_by_query(q)?;
+            .get_vertex_values_by_query(q)?; //////////////////////////////////////////////////////////////////
         let iter = vertex_values
             .into_iter()
-            .map(|(uuid, t)| models::Vertex::with_id(uuid, t));
+            .map(|(uuid, t)| models::Vertex::with_id(uuid, t)); // SHOULD BE FIXED TO RETURN THE STORED VALUE
         Ok(iter.collect())
     }
 

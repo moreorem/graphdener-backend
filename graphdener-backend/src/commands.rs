@@ -29,7 +29,6 @@ impl Commands
 
         // Parse file to filehandling function
         filehandling::import_edges(edge_list_path.unwrap());
-        
 
         Ok(Value::from(msg))
     }
@@ -63,21 +62,6 @@ impl Commands
         Ok(Value::from(msg.to_string()))
     }
 
-    pub fn load_edges() -> Result<Value, Value>
-    {
-        println!("Creating edge...");
-        let trans = statics::DATASTORE.transaction().unwrap();
-        let edge_list_available: bool;
-
-        let uuid_from = generate_uuid_v1(); // TESTING
-        let uuid_to = generate_uuid_v1(); // TESTING
-        let e = EdgeKey::new(uuid_from, Type::new("ege".to_string()).unwrap(), uuid_to);
-        // Edge::new(e);
-        let msg = trans.create_edge(&e);
-
-        Ok(Value::from("msg.as_str()"))
-    }
-
   
     // Returns specific info about a set or all of the vertices that exist in the database to the frontend
     pub fn get_vertex(v_id: &[Value], info_type: &str) -> Result<Value, Value>
@@ -96,55 +80,51 @@ impl Commands
 
         if v_id.len() > 0
         {
-            // for item in v_id.iter()
-            //                 .map(|item| { <Uuid>::parse_str(item.as_str()).unwrap() } )
-            // {}
-            
             v = VertexQuery::Vertices{ ids: v_id_list };
-            println!("many uuids");
-            // for item in v_id.into_iter().enumerate()
-            // {
-            //     v_id[0].as_str();
-            // }
-            // v = VertexQuery::Vertices{ids: <Uuid>::parse_str(v_id).unwrap()};
-
+            println!("some uuids");
         }
         else
         {
             v = VertexQuery::All{start_id: None, limit: 100};
             println!("all vertices");
         }
-        
         // In this case the msg variable is of type model::Vertex. It has to be broken into the struct items to be used
         let response = trans.get_vertices(&v).unwrap();
-        
 
         Ok(Commands::vert_info(info_type, response))
-
-
     }
-
 
 
     fn vert_info(info_type: &str, response: Vec<Vertex>) -> Value
     {
         // map all of the vectors in the response to one vector
         let r_iter = response.iter();
-        // let info_vec: Vec<_> = r_iter.map(|x| Value::Array([Value::from(x.pos[0]), Value::from(x.pos[1])].to_vec()) ).collect();
-        let r_type = response.iter();
 
-
+        // return the array of specific detail type for all of the selected vertices according to the command
         match info_type
         {
-            "position" => Value::Array(r_iter.map(|x| Value::Array([Value::from(x.pos[0]), Value::from(x.pos[1])].to_vec()) ).collect() ) ,
-            "type" => Value::Array(  r_type.map( |x| Value::from(x.t.0.to_owned()) ).collect() ),
+            "position" => Value::Array( r_iter.map(|x| Value::Array(vec![Value::from(x.pos[0]), Value::from(x.pos[1])]) ).collect() ) ,
+            "type" => Value::Array( r_iter.map( |x| Value::from(x.t.0.to_owned()) ).collect() ),
+            // "label" => Value::Array( r_iter.map( |x| Value::from(x.label.to_owned().unwrap()) ).collect() ),
             _ => Value::from("error")
 
         }
     }
 
+    pub fn load_edges() -> Result<Value, Value>
+        {
+            println!("Creating edge...");
+            let trans = statics::DATASTORE.transaction().unwrap();
+            let edge_list_available: bool;
 
+            let uuid_from = generate_uuid_v1(); // TESTING
+            let uuid_to = generate_uuid_v1(); // TESTING
+            let e = EdgeKey::new(uuid_from, Type::new("ege".to_string()).unwrap(), uuid_to);
+            // Edge::new(e);
+            let msg = trans.create_edge(&e);
 
+            Ok(Value::from("msg.as_str()"))
+        }
 
     pub fn get_connections() -> Result<Value, Value>
     {

@@ -39,7 +39,7 @@ impl NodeRelations
 
 
 	// create a map to translate imported ids into uuids
-	pub fn generate_id_map(&mut self) -> Result<&str, &str> //Vec<(u32, Uuid)>
+	pub fn generate_id_map(&mut self) -> Result<bool, bool> //Vec<(u32, Uuid)>
 	{
 		let mut a: Vec<u32> = Vec::new();
 
@@ -59,7 +59,7 @@ impl NodeRelations
 		}
 
 		println!("{:#?}", self.uuid_map);
-		Ok("Id to Uuid mapping created")
+		Ok(true)
 	}
 
 
@@ -68,7 +68,7 @@ impl NodeRelations
         println!("Storing vertices to database...");
         let trans = statics::DATASTORE.transaction().unwrap();
         let mut v: Vertex;
-        let mut e: EdgeKey;
+        // let mut e: EdgeKey;
 
         let mut uuid_list: Vec<&Uuid> = Vec::new();
 
@@ -79,11 +79,10 @@ impl NodeRelations
         	v = Vertex::with_id(*val, Type::new(vertex_type
 												.unwrap_or(&String::from("unknown"))
 											    .to_string())
-											    .unwrap());
+											    .unwrap(),
+											    Some("labelCreated".to_string()));
 
         	let msg = trans.create_vertex(&v);
-
-	        println!("{:?}", v);
 
         }
 
