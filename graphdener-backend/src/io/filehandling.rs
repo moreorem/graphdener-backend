@@ -1,7 +1,7 @@
 use std::io::{BufRead, BufReader, Result, Error};
 use std::{fs::File, io};
 use regex::Regex;
-use io::relations::NodeRelations;
+use io::importer::NodeRelations;
 use statics;
 
 pub fn import_edges(path: &str) -> io::Result<bool>

@@ -43,7 +43,6 @@ impl VertexQuery {
     pub fn outbound_edges(
         self,
         t: Option<Type>,
-        label: Option<String>,
         high: Option<DateTime<Utc>>,
         low: Option<DateTime<Utc>>,
         limit: u32,

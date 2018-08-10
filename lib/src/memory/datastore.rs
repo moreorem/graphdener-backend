@@ -1,6 +1,6 @@
 use super::super::{Datastore, EdgeQuery, Transaction, VertexQuery};
-use chrono::DateTime;
 use chrono::offset::Utc;
+use chrono::DateTime;
 use errors::Result;
 use models;
 use serde_json::Value as JsonValue;
@@ -17,20 +17,31 @@ struct InternalMemoryDatastore {
     edge_metadata: BTreeMap<(models::EdgeKey, String), JsonValue>,
     edges: BTreeMap<models::EdgeKey, DateTime<Utc>>,
     vertex_metadata: BTreeMap<(Uuid, String), JsonValue>,
+    vertex_spatial: BTreeMap<Uuid, models::Spatial>,
     vertices: BTreeMap<Uuid, models::Type>,
+
 }
+
+// TODO: Add new fields either by using metadata or as completely new btreemaps
+// * label
+// * spatial
+//    - x,y
+//    - size
+//    - color (probably add the color trait to Type struct)
 
 impl InternalMemoryDatastore {
     fn get_vertex_values_by_query(&self, q: &VertexQuery) -> Result<Vec<(Uuid, models::Type)>> {
         match *q {
             VertexQuery::All { start_id, limit } => if let Some(start_id) = start_id {
-                Ok(self.vertices
+                Ok(self
+                    .vertices
                     .range(start_id..)
                     .take(limit as usize)
                     .map(|(k, v)| (*k, v.clone()))
                     .collect())
             } else {
-                Ok(self.vertices
+                Ok(self
+                    .vertices
                     .iter()
                     .take(limit as usize)
                     .map(|(k, v)| (*k, v.clone()))
@@ -131,13 +142,13 @@ impl InternalMemoryDatastore {
                             }
 
                             if let Some(high_filter) = high_filter {
-                                if update_datetime > &high_filter {
+                                if *update_datetime > high_filter {
                                     continue;
                                 }
                             }
 
                             if let Some(low_filter) = low_filter {
-                                if update_datetime < &low_filter {
+                                if *update_datetime < low_filter {
                                     continue;
                                 }
                             }
@@ -167,13 +178,13 @@ impl InternalMemoryDatastore {
                             }
 
                             if let Some(high_filter) = high_filter {
-                                if update_datetime > &high_filter {
+                                if *update_datetime > high_filter {
                                     continue;
                                 }
                             }
 
                             if let Some(low_filter) = low_filter {
-                                if update_datetime < &low_filter {
+                                if *update_datetime < low_filter {
                                     continue;
                                 }
                             }
@@ -230,9 +241,7 @@ impl InternalMemoryDatastore {
 
             let mut deletable_edge_metadata: Vec<(models::EdgeKey, String)> = Vec::new();
 
-            for (metadata_key, _) in self.edge_metadata
-                .range((edge_key.clone(), "".to_string())..)
-            {
+            for (metadata_key, _) in self.edge_metadata.range((edge_key.clone(), "".to_string())..) {
                 let &(ref metadata_edge_key, _) = metadata_key;
 
                 if &edge_key != metadata_edge_key {
@@ -261,6 +270,7 @@ impl MemoryDatastore {
                 edge_metadata: BTreeMap::new(),
                 edges: BTreeMap::new(),
                 vertex_metadata: BTreeMap::new(),
+                vertex_spatial: BTreeMap::new(),
                 vertices: BTreeMap::new(),
             })),
         }
@@ -284,24 +294,21 @@ pub struct MemoryTransaction {
 impl Transaction for MemoryTransaction {
     fn create_vertex(&self, vertex: &models::Vertex) -> Result<bool> {
         let mut datastore = self.datastore.write().unwrap();
+        let mut inserted = false;
 
-        // Check if uuid exists. If not then store input in memory
-        if datastore.vertices.contains_key(&vertex.id) {
-            Ok(false)
-        } else {
-            datastore.vertices.insert(vertex.id, vertex.t.clone());
-            Ok(true)
-        }
+        datastore.vertices.entry(vertex.id).or_insert_with(|| {
+            inserted = true;
+            vertex.t.clone()
+        });
+
+        Ok(inserted)
     }
 
     fn get_vertices(&self, q: &VertexQuery) -> Result<Vec<models::Vertex>> {
-        let vertex_values = self.datastore
-            .read()
-            .unwrap()
-            .get_vertex_values_by_query(q)?; //////////////////////////////////////////////////////////////////
+        let vertex_values = self.datastore.read().unwrap().get_vertex_values_by_query(q)?;
         let iter = vertex_values
             .into_iter()
-            .map(|(uuid, t)| models::Vertex::with_id(uuid, t)); // SHOULD BE FIXED TO RETURN THE STORED VALUE
+            .map(|(uuid, t)| models::Vertex::with_id(uuid, t));
         Ok(iter.collect())
     }
 
@@ -417,9 +424,7 @@ impl Transaction for MemoryTransaction {
         let vertex_values = datastore.get_vertex_values_by_query(q)?;
 
         for (id, _) in vertex_values {
-            datastore
-                .vertex_metadata
-                .insert((id, name.to_string()), value.clone());
+            datastore.vertex_metadata.insert((id, name.to_string()), value.clone());
         }
 
         Ok(())
@@ -443,9 +448,7 @@ impl Transaction for MemoryTransaction {
         let edge_values = datastore.get_edge_values_by_query(q)?;
 
         for (key, _) in edge_values {
-            let metadata_value = datastore
-                .edge_metadata
-                .get(&(key.clone(), name.to_string()));
+            let metadata_value = datastore.edge_metadata.get(&(key.clone(), name.to_string()));
 
             if let Some(metadata_value) = metadata_value {
                 result.push(models::EdgeMetadata::new(key, metadata_value.clone()));
@@ -461,9 +464,7 @@ impl Transaction for MemoryTransaction {
         let edge_values = datastore.get_edge_values_by_query(q)?;
 
         for (key, _) in edge_values {
-            datastore
-                .edge_metadata
-                .insert((key, name.to_string()), value.clone());
+            datastore.edge_metadata.insert((key, name.to_string()), value.clone());
         }
 
         Ok(())
