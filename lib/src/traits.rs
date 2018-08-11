@@ -40,7 +40,7 @@ pub trait Transaction {
     /// # Arguments
     /// * `type`: The type of the vertex to create.
     /// * `label`: A label for the vertex
-    fn create_vertex_from_type(&self, t: models::Type, label: Option<String>) -> Result<Uuid> {
+    fn create_vertex_from_type(&self, t: models::Type) -> Result<Uuid> {
         let v = models::Vertex::new(t);
         
         if !self.create_vertex(&v)? {

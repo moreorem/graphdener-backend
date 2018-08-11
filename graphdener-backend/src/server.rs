@@ -20,7 +20,7 @@ impl Service for Echo
         {
             "import" => Commands::import_paths(params[0].as_array().expect("expected array")),
             "init" => Commands::initialize(params[0].as_str().expect("expected str")), //TODO receive trigger of choice from client
-            "c_vert" => Commands::create_vertex(params[0].as_str().expect("expected str")),
+            // "c_vert" => Commands::create_vertex(params[0].as_str().expect("expected str")),
             "c_edge" => Commands::load_edges(),
             "get_conns" => Commands::get_connections(),
             "get_vert" => Commands::get_vertex(params[0].as_array().expect("expected array"), params[1].as_str().expect("expected str")),

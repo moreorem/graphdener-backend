@@ -17,7 +17,7 @@ struct InternalMemoryDatastore {
     edge_metadata: BTreeMap<(models::EdgeKey, String), JsonValue>,
     edges: BTreeMap<models::EdgeKey, DateTime<Utc>>,
     vertex_metadata: BTreeMap<(Uuid, String), JsonValue>,
-    vertex_spatial: BTreeMap<Uuid, models::Spatial>,
+    spatial: BTreeMap<Uuid, models::Spatial>,
     vertices: BTreeMap<Uuid, models::Type>,
 
 }
@@ -30,22 +30,45 @@ struct InternalMemoryDatastore {
 //    - color (probably add the color trait to Type struct)
 
 impl InternalMemoryDatastore {
-    fn get_vertex_values_by_query(&self, q: &VertexQuery) -> Result<Vec<(Uuid, models::Type)>> {
+    // TODO: add more values to return such as pos, size, color
+    fn get_vertex_values_by_query(&self, q: &VertexQuery) -> Result<Vec<(Uuid, models::Type, models::Spatial)>> {
         match *q {
             VertexQuery::All { start_id, limit } => if let Some(start_id) = start_id {
-                Ok(self
-                    .vertices
-                    .range(start_id..)
-                    .take(limit as usize)
-                    .map(|(k, v)| (*k, v.clone()))
-                    .collect())
+                let res = Vec::new();
+                let zipped = self
+                            .vertices
+                            .range(start_id..)
+                            .take(limit as usize)
+                            .map(|(k, v)| (*k, v.clone())).zip(
+                                                        self
+                                                        .spatial
+                                                        .range(start_id..)
+                                                        .take(limit as usize)
+                                                        .map(|(k, v)| (v.clone()))
+                                                        );
+                for i in zipped.collect()
+                {
+                    res.push(i);
+                }
+                Ok(res)
             } else {
-                Ok(self
+                let res = Vec::new();
+                let zipped = self
                     .vertices
                     .iter()
                     .take(limit as usize)
-                    .map(|(k, v)| (*k, v.clone()))
-                    .collect())
+                    .map(|(k, v)| (*k, v.clone())).zip(
+                                                        self
+                                                        .spatial
+                                                        .iter()
+                                                        .take(limit as usize)
+                                                        .map(|(k, v)| (v.clone()))
+                                                        );
+                for i in zipped.collect()
+                {
+                    res.push(i);
+                }
+                Ok(res)
             },
             VertexQuery::Vertices { ref ids } => {
                 let mut results = Vec::new();
@@ -93,6 +116,41 @@ impl InternalMemoryDatastore {
             }
         }
     }
+
+    // fn get_spatial_by_query(&self, q: &VertexQuery) -> Result<Vec<(Uuid, models::Spatial)>>
+    // {
+    //     match *q 
+    //     {
+    //         VertexQuery::All { start_id, limit } => if let Some(start_id) = start_id {
+    //             Ok(self
+    //                 .spatial
+    //                 .range(start_id..)
+    //                 .take(limit as usize)
+    //                 .map(|(k, v)| (*k, v.clone()))
+    //                 .collect())
+    //         } else {
+    //             Ok(self
+    //                 .spatial
+    //                 .iter()
+    //                 .take(limit as usize)
+    //                 .map(|(k, v)| (*k, v.clone()))
+    //                 .collect())
+    //         },
+    //         VertexQuery::Vertices { ref ids } => {
+    //             let mut results = Vec::new();
+
+    //             for id in ids {
+    //                 let value = self.spatial.get(id);
+
+    //                 if let Some(value) = value {
+    //                     results.push((*id, value.clone()));
+    //                 }
+    //             }
+
+    //             Ok(results)
+    //         }
+    //     }
+    // }
 
     fn get_edge_values_by_query(&self, q: &EdgeQuery) -> Result<Vec<(models::EdgeKey, DateTime<Utc>)>> {
         match *q {
@@ -270,7 +328,7 @@ impl MemoryDatastore {
                 edge_metadata: BTreeMap::new(),
                 edges: BTreeMap::new(),
                 vertex_metadata: BTreeMap::new(),
-                vertex_spatial: BTreeMap::new(),
+                spatial: BTreeMap::new(),
                 vertices: BTreeMap::new(),
             })),
         }
@@ -306,9 +364,10 @@ impl Transaction for MemoryTransaction {
 
     fn get_vertices(&self, q: &VertexQuery) -> Result<Vec<models::Vertex>> {
         let vertex_values = self.datastore.read().unwrap().get_vertex_values_by_query(q)?;
-        let iter = vertex_values
+        // let spatial = self.datastore.read().unwrap().get_spatial_by_query(q)?;
+        let iter = vertex_values // maybe choose to select a slice after adding new fields
             .into_iter()
-            .map(|(uuid, t)| models::Vertex::with_id(uuid, t));
+            .map(|(uuid, t, s)| models::Vertex::with_id(uuid, t, s));
         Ok(iter.collect())
     }
 
@@ -317,7 +376,7 @@ impl Transaction for MemoryTransaction {
         let deletable_vertices = datastore
             .get_vertex_values_by_query(q)?
             .into_iter()
-            .map(|(k, _)| k)
+            .map(|(k, _, _)| k)
             .collect();
         datastore.delete_vertices(deletable_vertices);
         Ok(())
@@ -407,7 +466,7 @@ impl Transaction for MemoryTransaction {
         let datastore = self.datastore.read().unwrap();
         let vertex_values = datastore.get_vertex_values_by_query(q)?;
 
-        for (id, _) in vertex_values {
+        for (id, _, _) in vertex_values {
             let metadata_value = datastore.vertex_metadata.get(&(id, name.to_string()));
 
             if let Some(metadata_value) = metadata_value {
@@ -423,7 +482,7 @@ impl Transaction for MemoryTransaction {
 
         let vertex_values = datastore.get_vertex_values_by_query(q)?;
 
-        for (id, _) in vertex_values {
+        for (id, _, _) in vertex_values {
             datastore.vertex_metadata.insert((id, name.to_string()), value.clone());
         }
 
@@ -435,12 +494,15 @@ impl Transaction for MemoryTransaction {
 
         let vertex_values = datastore.get_vertex_values_by_query(q)?;
 
-        for (id, _) in vertex_values {
+        for (id, _, _) in vertex_values {
             datastore.vertex_metadata.remove(&(id, name.to_string()));
         }
 
         Ok(())
     }
+
+    
+
 
     fn get_edge_metadata(&self, q: &EdgeQuery, name: &str) -> Result<Vec<models::EdgeMetadata>> {
         let mut result = Vec::new();

@@ -103,7 +103,7 @@ impl Commands
         // return the array of specific detail type for all of the selected vertices according to the command
         match info_type
         {
-            "position" => Value::Array( r_iter.map(|x| Value::Array(vec![Value::from(x.pos[0]), Value::from(x.pos[1])]) ).collect() ) ,
+            "position" => Value::Array( r_iter.map(|v| Value::Array(vec![Value::from(v.spatial.pos[0]), Value::from(v.spatial.pos[1])]) ).collect() ) ,
             "type" => Value::Array( r_iter.map( |x| Value::from(x.t.0.to_owned()) ).collect() ),
             // "label" => Value::Array( r_iter.map( |x| Value::from(x.label.to_owned().unwrap()) ).collect() ),
             _ => Value::from("error")

@@ -1,4 +1,5 @@
 use super::types::Type;
+use super::spatial::Spatial;
 use util::generate_uuid_v1;
 use uuid::Uuid;
 
@@ -16,8 +17,8 @@ pub struct Vertex {
     pub t: Type,
 
     // NEW, add x,y positions in the surface
-    pub pos: [f64; 2],
-
+    // pub pos: [f64; 2],
+    pub spatial: Spatial,
     // NEW, add label to add a name for every node
     pub label: String
 }
@@ -32,7 +33,7 @@ impl Vertex {
     ///
     /// * `t` - The type of the vertex.
     pub fn new(t: Type) -> Self {
-        Self::with_id(generate_uuid_v1(), t)
+        Self::with_id(generate_uuid_v1(), t, Spatial::default())
     }
 
     /// Creates a new vertex with a specified id.
@@ -41,11 +42,12 @@ impl Vertex {
     ///
     /// * `id` - The id of the vertex.
     /// * `t` - The type of the vertex.
-    pub fn with_id(id: Uuid, t: Type) -> Self {
+    /// * `s` - The spatial info of the vertex.
+    pub fn with_id(id: Uuid, t: Type, s: Spatial) -> Self {
         Vertex { 
                 id: id,
                 t: t,
-                pos: [0.,0.],
+                spatial: s,
                 label: String::from("label") // Default value until it gets implemented to receive input label.unwrap_or("".to_string()) 
             }
     }
