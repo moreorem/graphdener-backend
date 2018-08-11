@@ -1,6 +1,6 @@
 use rmp_rpc::Value;
 use io::filehandling;
-use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, VertexQuery, Vertex, util::generate_uuid_v1};
+use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, VertexQuery, VertexMetadata, Vertex, util::generate_uuid_v1};
 use datastore::ProxyDatastore;
 use statics;
 use std::iter::Iterator;
@@ -85,7 +85,7 @@ impl Commands
         }
         else
         {
-            v = VertexQuery::All{start_id: None, limit: 100};
+            v = VertexQuery::All{ start_id: None, limit: 1000000000 };
             println!("all vertices");
         }
         // In this case the msg variable is of type model::Vertex. It has to be broken into the struct items to be used
@@ -99,12 +99,13 @@ impl Commands
     {
         // map all of the vectors in the response to one vector
         let r_iter = response.iter();
-
+        // let s_iter = Commands::get_spatial().iter();
         // return the array of specific detail type for all of the selected vertices according to the command
         match info_type
         {
-            "position" => Value::Array( r_iter.map(|x| Value::Array(vec![Value::from(x.pos[0]), Value::from(x.pos[1])]) ).collect() ) ,
+            // "position" => Value::Array( r_iter.map(|x| Value::Array(vec![Value::from(x.pos[0]), Value::from(x.pos[1])]) ).collect() ) ,
             "type" => Value::Array( r_iter.map( |x| Value::from(x.t.0.to_owned()) ).collect() ),
+            "spatial" => Value::Array(Commands::get_spatial()),
             // "label" => Value::Array( r_iter.map( |x| Value::from(x.label.to_owned().unwrap()) ).collect() ),
             _ => Value::from("error")
 
@@ -130,6 +131,16 @@ impl Commands
     {
         // Returns the edge list, adjacency matrix or adjacency list in order to draw the graph
         Ok(Value::from("test"))
+    }
+
+    
+
+    pub fn get_spatial() -> Vec<Value>
+    {
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
+        let t = trans.get_vertex_metadata(&v, "pos").unwrap();
+        t.iter().map(|x| Value::from(x.value.to_string())).collect()
 
     }
 

@@ -298,10 +298,10 @@ impl Transaction for MemoryTransaction {
         let vertex_values = self.datastore
             .read()
             .unwrap()
-            .get_vertex_values_by_query(q)?; //////////////////////////////////////////////////////////////////
+            .get_vertex_values_by_query(q)?;
         let iter = vertex_values
             .into_iter()
-            .map(|(uuid, t)| models::Vertex::with_id(uuid, t)); // SHOULD BE FIXED TO RETURN THE STORED VALUE
+            .map(|(uuid, t)| models::Vertex::with_id(uuid, t));
         Ok(iter.collect())
     }
 

@@ -1,5 +1,4 @@
 use datastore::{datastore, ProxyDatastore};
-use io::relations::NodeRelations;
 
 lazy_static! {
     /// The underlying datastore

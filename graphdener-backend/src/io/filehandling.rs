@@ -1,7 +1,7 @@
 use std::io::{BufRead, BufReader, Result, Error};
 use std::{fs::File, io};
 use regex::Regex;
-use io::relations::NodeRelations;
+use io::importer::NodeRelations;
 use statics;
 
 pub fn import_edges(path: &str) -> io::Result<bool>
@@ -39,7 +39,7 @@ pub fn import_edges(path: &str) -> io::Result<bool>
 	relation_table.generate_id_map();
 	// Create number of vertices as many as the variety of uuids
 	relation_table.create_vertices(Some(&String::from("ego")));
-
+	relation_table.initialize_spatial();
 	Ok(true)
 }
 

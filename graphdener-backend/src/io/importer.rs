@@ -2,7 +2,8 @@ use indradb::util::generate_uuid_v1;
 use uuid::Uuid;
 use std::collections::HashMap;
 use indradb::util;
-use indradb::{Datastore, Transaction, Type, Edge, EdgeKey, Vertex};
+use serde_json::Value;
+use indradb::{Datastore, Transaction, Type, Edge, EdgeKey, Vertex, VertexQuery};
 use statics;
 
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
@@ -79,8 +80,7 @@ impl NodeRelations
         	v = Vertex::with_id(*val, Type::new(vertex_type
 												.unwrap_or(&String::from("unknown"))
 											    .to_string())
-											    .unwrap(),
-											    Some("labelCreated".to_string()));
+											    .unwrap());
 
         	let msg = trans.create_vertex(&v);
 
@@ -101,6 +101,14 @@ impl NodeRelations
 		}
 	}
 
+	pub fn initialize_spatial(&self)
+    {
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
+        trans.set_vertex_metadata(&v, "pos", &json!([0.,0.]));
+        trans.set_vertex_metadata(&v, "size", &json!(1.));
+        trans.set_vertex_metadata(&v, "color", &json!((165,0,255)));
+    }
 
 	// UNFINISHED
 	pub fn create_edges() -> ()

@@ -347,7 +347,7 @@ impl Transaction for RocksdbTransaction {
 
         let mapped = iterator.map(move |item| {
             let (id, t) = item?;
-            let vertex = models::Vertex::with_id(id, t, None);
+            let vertex = models::Vertex::with_id(id, t);
             Ok(vertex)
         });
 
