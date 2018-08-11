@@ -105,7 +105,10 @@ impl Commands
         {
             // "position" => Value::Array( r_iter.map(|x| Value::Array(vec![Value::from(x.pos[0]), Value::from(x.pos[1])]) ).collect() ) ,
             "type" => Value::Array( r_iter.map( |x| Value::from(x.t.0.to_owned()) ).collect() ),
-            "spatial" => Value::Array(Commands::get_spatial()),
+            "pos" => Value::Array(Commands::get_spatial("pos")),
+            "size" => Value::Array(Commands::get_spatial("size")),
+            "color" => Value::Array(Commands::get_spatial("color")),
+
             // "label" => Value::Array( r_iter.map( |x| Value::from(x.label.to_owned().unwrap()) ).collect() ),
             _ => Value::from("error")
 
@@ -133,13 +136,18 @@ impl Commands
         Ok(Value::from("test"))
     }
 
-    
-
-    pub fn get_spatial() -> Vec<Value>
+    pub fn get_spatial(kind: &str) -> Vec<Value>
     {
         let trans = statics::DATASTORE.transaction().unwrap();
         let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
-        let t = trans.get_vertex_metadata(&v, "pos").unwrap();
+        let t = match kind
+        {
+            "pos" => trans.get_vertex_metadata(&v, "pos").unwrap(),
+            "size" => trans.get_vertex_metadata(&v, "size").unwrap(),
+            "color" => trans.get_vertex_metadata(&v, "color").unwrap(),
+            _ => vec!()
+        };
+
         t.iter().map(|x| Value::from(x.value.to_string())).collect()
 
     }
