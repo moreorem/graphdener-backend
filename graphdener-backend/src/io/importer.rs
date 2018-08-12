@@ -110,36 +110,7 @@ impl NodeRelations
         trans.set_vertex_metadata(&v, "color", &json!((165,0,255)));
     }
 
-	// UNFINISHED
-	pub fn create_edges() -> ()
-	{
-		 // for pair in self.edge_list.iter()
-        // {
-        // 	println!("{:?}", pair);
-	       //  let uuid_from = self.uuid_map.get(&pair.0).unwrap();
-	       //  let uuid_to = self.uuid_map.get(&pair.1).unwrap();
-        // 	println!("{:?} - {:?}", uuid_from, uuid_to);
 
-	        // TODO repeat for every node in the list
-	        // TODO try serializing all queries in one transaction
-	        // v = Vertex::with_id(uuid_list,
-
-
-
-	        // 	*self.uuid_map.get(&pair.0).unwrap(), Type::new(vertex_type
-	        // 													.unwrap_or(&String::from("unknown"))
-									// 						    .to_string())
-									// 						    .unwrap());
-	        
-
-	        // let edge_type = Type::new(String::from("unknown")).unwrap();
-	        // e = EdgeKey::new(*uuid_from, edge_type, *uuid_to);
-
-	        // trans.create_edge(&e);
-	    
-	    // }
-	}
 }
-
 // Combine information about vertex connections and x,y positions and create a list of tuples that contain 
 // (from_posx,from_posy,to_posx,to_posy)
