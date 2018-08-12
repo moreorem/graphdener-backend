@@ -43,26 +43,3 @@ pub fn import_edges(path: &str) -> io::Result<bool>
 	Ok(true)
 }
 
-
-// fn import_circles(path: &str) -> Result<bool>
-// {
-// 	let file = File::open(path)?;
-// 	let mut line_numbers:i32 = 0;
-// 	// Regular expression pattern for circles
-// 	let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
-
-
-// 	for line in BufReader::new(file).lines()
-// 	{
-
-// 		line_numbers += 1;
-		
-// 	}
-// 	println!("Number of lines: {}", line_numbers);
-// 	Ok(true)
-// }
-
-// fn import_communities(path: &str) -> Result<bool>
-// {
-// 	Ok(true)
-// }

@@ -1,7 +1,7 @@
 use rmp_rpc::Value;
 use io::filehandling;
-use indradb::{Datastore, MemoryDatastore, RocksdbDatastore, Transaction, Type, EdgeKey, VertexQuery, VertexMetadata, Vertex, util::generate_uuid_v1};
-use datastore::ProxyDatastore;
+use indradb::{Datastore, Transaction, Type, EdgeKey, VertexQuery, Vertex, util::generate_uuid_v1};
+// use datastore::ProxyDatastore;
 use statics;
 use std::iter::Iterator;
 use uuid::Uuid;
@@ -33,23 +33,25 @@ impl Commands
         Ok(Value::from(msg))
     }
 
-    pub fn initialize(datastore_type: &str) -> Result<Value, Value>
-    {
-        let msg = "hello";
-        println!("Initializing database...");
-       
-        if datastore_type == "rocksdb" {
-            let datastore = RocksdbDatastore::new("localhost:8888", Some(5))
-                            .expect("Expected to be able to create a RocksDB datastore");
-            ProxyDatastore::Rocksdb(datastore);
-        }
-        else {
-            let datastore = MemoryDatastore::default();
-            ProxyDatastore::Memory(datastore);
-        }
+    // pub fn initialize(datastore_type: &str) -> Result<Value, Value>
+    // {
+    //     println!("Initializing database...");
+    //     let msg: Value;
 
-        Ok(Value::from(msg))
-    }
+    //     if datastore_type == "rocksdb" {
+    //         let datastore = RocksdbDatastore::new("localhost:8888", Some(5))
+    //                         .expect("Expected to be able to create a RocksDB datastore");
+    //         ProxyDatastore::Rocksdb(datastore);
+    //         msg = Value::from("RocksDB Datastore");
+    //     }
+    //     else {
+    //         let datastore = MemoryDatastore::default();
+    //         ProxyDatastore::Memory(datastore);
+    //         msg = Value::from("Memory Datastore");
+    //     }
+
+    //     Ok(Value::from(msg))
+    // }
 
     pub fn create_vertex(v_type: &str) -> Result<Value, Value>
     {
@@ -99,7 +101,7 @@ impl Commands
     {
         // map all of the vectors in the response to one vector
         let r_iter = response.iter();
-        // let s_iter = Commands::get_spatial().iter();
+           
         // return the array of specific detail type for all of the selected vertices according to the command
         match info_type
         {
@@ -108,27 +110,39 @@ impl Commands
             "pos" => Value::Array(Commands::get_spatial("pos")),
             "size" => Value::Array(Commands::get_spatial("size")),
             "color" => Value::Array(Commands::get_spatial("color")),
-
             // "label" => Value::Array( r_iter.map( |x| Value::from(x.label.to_owned().unwrap()) ).collect() ),
             _ => Value::from("error")
 
         }
     }
 
-    pub fn load_edges() -> Result<Value, Value>
-        {
-            println!("Creating edge...");
-            let trans = statics::DATASTORE.transaction().unwrap();
-            let edge_list_available: bool;
+    // general getter that leads to specific objects
+    pub fn get_object(obj: &str) -> Result<Value, Value>
+    {
+        let r = match obj {
+            "edge" => Value::Boolean(Commands::get_edges().unwrap()),
+            "vert" => Value::Boolean(Commands::get_vert().unwrap()),
+            _ => Value::Boolean(false)
+        };
+        Ok(Value::from("e") )// TEMPORARY
+    }
 
-            let uuid_from = generate_uuid_v1(); // TESTING
-            let uuid_to = generate_uuid_v1(); // TESTING
-            let e = EdgeKey::new(uuid_from, Type::new("ege".to_string()).unwrap(), uuid_to);
-            // Edge::new(e);
-            let msg = trans.create_edge(&e);
 
-            Ok(Value::from("msg.as_str()"))
-        }
+    // make a getter only for edge types, weight, direction and fromto
+    fn get_edges() -> Result<bool, bool>
+    {
+        println!("Creating edge...");
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let edge_list_available: bool;
+
+        Ok(true)
+    }
+
+
+    fn get_vert() -> Result<bool,bool>
+    {
+        Ok(true)
+    }
 
     pub fn get_connections() -> Result<Value, Value>
     {
@@ -136,7 +150,7 @@ impl Commands
         Ok(Value::from("test"))
     }
 
-    pub fn get_spatial(kind: &str) -> Vec<Value>
+    fn get_spatial(kind: &str) -> Vec<Value>
     {
         let trans = statics::DATASTORE.transaction().unwrap();
         let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
@@ -152,4 +166,23 @@ impl Commands
 
     }
 
+    pub fn update(field: &str, values: &[Value]) -> Result<Value, Value>
+    {
+        match field {
+            "pos" => Commands::set_pos(values),
+            _ => panic!("unknown attribute")
+
+        }
+
+        Ok(Value::from("ok"))
+    }
+
+    fn set_pos(v: &[Value])
+    {
+        let trans = statics::DATASTORE.transaction().unwrap();
+        // trans.get_vertex_metadata(&v, "pos").unwrap();
+    }
+
+    
 }
+

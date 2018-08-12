@@ -19,9 +19,10 @@ impl Service for Echo
         match method 
         {
             "import" => Commands::import_paths(params[0].as_array().expect("expected array")),
-            "init" => Commands::initialize(params[0].as_str().expect("expected str")), //TODO receive trigger of choice from client
+            "update" => Commands::update(params[0].as_str().expect("expected str"),
+                                        params[1].as_array().expect("expected array")),
             "c_vert" => Commands::create_vertex(params[0].as_str().expect("expected str")),
-            "c_edge" => Commands::load_edges(),
+            "get" => Commands::get_object(params[0].as_str().expect("expected str")),
             "get_conns" => Commands::get_connections(),
             "get_vert" => Commands::get_vertex(params[0].as_array().expect("expected array"), params[1].as_str().expect("expected str")),
             _ => Err("invalid argument".into())

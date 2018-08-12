@@ -23,6 +23,7 @@ struct InternalMemoryDatastore {
 impl InternalMemoryDatastore {
     fn get_vertex_values_by_query(&self, q: &VertexQuery) -> Result<Vec<(Uuid, models::Type)>> {
         match *q {
+            // for (a, c) in b.iter().zip(d.iter()) { ... } use it if about to add new fields
             VertexQuery::All { start_id, limit } => if let Some(start_id) = start_id {
                 Ok(self.vertices
                     .range(start_id..)

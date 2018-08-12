@@ -90,6 +90,14 @@ impl NodeRelations
         println!("{:?}", msg);
 	}
 
+	pub fn initialize_spatial(&self)
+    {
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
+        trans.set_vertex_metadata(&v, "pos", &json!([0.,0.]));
+        trans.set_vertex_metadata(&v, "size", &json!(1.));
+        trans.set_vertex_metadata(&v, "color", &json!((165,0,255)));
+    }
 
 	fn get_type(&self) -> &str
 	{
@@ -100,17 +108,6 @@ impl NodeRelations
 			ReprMethod::AdjList => "Adjacency List"
 		}
 	}
-
-	pub fn initialize_spatial(&self)
-    {
-        let trans = statics::DATASTORE.transaction().unwrap();
-        let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
-        trans.set_vertex_metadata(&v, "pos", &json!([0.,0.]));
-        trans.set_vertex_metadata(&v, "size", &json!(1.));
-        trans.set_vertex_metadata(&v, "color", &json!((165,0,255)));
-    }
-
-
 }
 // Combine information about vertex connections and x,y positions and create a list of tuples that contain 
 // (from_posx,from_posy,to_posx,to_posy)
