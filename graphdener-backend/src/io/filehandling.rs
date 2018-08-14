@@ -1,7 +1,7 @@
 use std::io::{BufRead, BufReader, Result, Error};
 use std::{fs::File, io};
 use regex::Regex;
-use io::importer::EdgeImporter;
+use io::importer::{initialize_spatial, EdgeImporter, NodeImporter};
 use statics;
 
 // TODO: Create Vertex Uuids and edges concurrently
@@ -51,7 +51,7 @@ pub fn import_vertices(path: &str) -> io::Result<bool>
 	let file = File::open(path)?;
 	let re = Regex::new(r"(\d+)[ \t]+(\d+)[ \t]+(\d+)").unwrap();
 
-	let mut id_label_type: (u32, String);
+	let mut id_label_type: (u32, &str, &str);
 
 	// Create temporary collection to handle import
 	let mut relation_table = NodeImporter::new();
@@ -64,10 +64,13 @@ pub fn import_vertices(path: &str) -> io::Result<bool>
 		{
 			// Distinguish id columns and store them separately
 			id_label_type = (caps.get(1).unwrap().as_str().parse::<u32>().unwrap(),
-							caps.get(2).unwrap().as_str().unwrap(),
-							caps.get(3).unwrap().as_str().unwrap());
+							caps.get(2).unwrap().as_str(),
+							caps.get(3).unwrap().as_str());
 			relation_table.update(id_label_type);
 		}
 		// for loop to use on another thread
 	}
+
+	relation_table.create_vertices(Some(&String::from("ego")));
+	Ok(true)
 }

@@ -83,26 +83,26 @@ impl EdgeImporter
 
 pub struct NodeImporter
 {
-	node_list: Vec<(u32, &str, &str)>,
-	label_list: Vec<String>
+	node_list: Vec<(u32, String, String)>,
+	label_list: Vec<String>,
+	type_map: HashMap<String, Uuid>,
 	uuid_map: HashMap<u32, Uuid>
 }
 
 impl NodeImporter
 {
-	fn get_type(&self) -> &str
+	pub fn new() -> NodeImporter
 	{
-		match self.representation_type
-		{
-			ReprMethod::EdgeList => "Edge List",
-			ReprMethod::AdjMatrix => "Adjacency Matrix",
-			ReprMethod::AdjList => "Adjacency List"
-		}
+		NodeImporter {	node_list: Vec::new(),
+						label_list: Vec::new(),
+						type_list: Vec::new(),
+						uuid_map: HashMap::new() }
 	}
 
 	pub fn update(&mut self, id_label_type: (u32, &str, &str) )
 	{
-		self.node_list.push(id_label_type);
+		let a = (id_label_type.0, id_label_type.1.to_string(), id_label_type.2.to_string());
+		self.node_list.push(a);
 	}
 
 	pub fn generate_id_map(&mut self) -> Result<bool, bool>
@@ -116,6 +116,7 @@ impl NodeImporter
 
 		// probably would be faster if map function is used
 		a.sort();
+		a.dedup();
 
 		for element in a.into_iter()
 		{
@@ -126,15 +127,19 @@ impl NodeImporter
 		Ok(true)
 	}
 
+
 	pub fn generate_type_map(&mut self) -> Result<bool, bool>
 	{
 		let mut a: Vec<u32> = Vec::new();
+		// type_map = (key: type, value: vec!(id1,id2,id3,id4...))
+		let mut y: String = String::from("");
 
-		for tup in &self.type_list
-		{
-			a.push(tup.0);
-			a.push(tup.1);
-		}
+		&self.node_list.iter().map(|x| &self.type_map.entry(x.2).or_insert( *self.uuid_map.get(&x.0).unwrap()) );
+		// for tup in &self.node_list
+		// {
+		// 	a.push(tup.0);
+		// 	a.push(tup.1);
+		// }
 
 		// probably would be faster if map function is used
 		a.sort();
@@ -150,7 +155,7 @@ impl NodeImporter
 	}
 }
 
-pub fn initialize_spatial(&self)
+pub fn initialize_spatial()
 {
     let trans = statics::DATASTORE.transaction().unwrap();
     let v = VertexQuery::All{ start_id: None, limit: 1000000000 };

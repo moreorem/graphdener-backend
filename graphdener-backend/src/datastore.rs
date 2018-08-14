@@ -1,6 +1,6 @@
 use indradb::{
     Datastore, Edge, EdgeDirection, EdgeKey, EdgeMetadata, EdgeQuery, Error, MemoryDatastore, MemoryTransaction,
-    RocksdbDatastore, RocksdbTransaction, Transaction, Type, Vertex, VertexMetadata, VertexQuery, 
+    Transaction, Type, Vertex, VertexMetadata, VertexQuery, 
 };
 use serde_json::Value as JsonValue;
 /// This module exposes a proxy datastore and transaction that in turn call
@@ -12,17 +12,12 @@ use uuid::Uuid;
 
 #[derive(Debug)]
 pub enum ProxyDatastore {
-    Rocksdb(RocksdbDatastore),
     Memory(MemoryDatastore),
 }
 
 impl Datastore<ProxyTransaction> for ProxyDatastore {
     fn transaction(&self) -> Result<ProxyTransaction, Error> {
         match *self {
-            ProxyDatastore::Rocksdb(ref r) => {
-                let transaction = r.transaction()?;
-                Ok(ProxyTransaction::Rocksdb(transaction))
-            }
             ProxyDatastore::Memory(ref mem) => {
                 let transaction = mem.transaction()?;
                 Ok(ProxyTransaction::Memory(transaction))

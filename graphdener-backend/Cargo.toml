@@ -8,7 +8,6 @@ license = "MIT"
 [dependencies.indradb-lib]
 path = "../lib"
 version = "0.15.0"
-features = ["rocksdb-datastore"]
 
 [dependencies]
 time = "0.1"
