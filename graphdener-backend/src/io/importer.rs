@@ -85,7 +85,7 @@ pub struct NodeImporter
 {
 	node_list: Vec<(u32, String, String)>,
 	label_list: Vec<String>,
-	type_map: HashMap<String, Uuid>,
+	type_map: HashMap<String, Vec<Uuid>>,
 	uuid_map: HashMap<u32, Uuid>
 }
 
@@ -95,7 +95,7 @@ impl NodeImporter
 	{
 		NodeImporter {	node_list: Vec::new(),
 						label_list: Vec::new(),
-						type_list: Vec::new(),
+						type_map: HashMap::new(),
 						uuid_map: HashMap::new() }
 	}
 
@@ -130,27 +130,27 @@ impl NodeImporter
 
 	pub fn generate_type_map(&mut self) -> Result<bool, bool>
 	{
-		let mut a: Vec<u32> = Vec::new();
-		// type_map = (key: type, value: vec!(id1,id2,id3,id4...))
-		let mut y: String = String::from("");
+		// generate a map with the imported ids and uuids
+		let mut a: Vec<Uuid> = Vec::new();
 
-		&self.node_list.iter().map(|x| &self.type_map.entry(x.2).or_insert( *self.uuid_map.get(&x.0).unwrap()) );
-		// for tup in &self.node_list
-		// {
-		// 	a.push(tup.0);
-		// 	a.push(tup.1);
-		// }
-
-		// probably would be faster if map function is used
-		a.sort();
-		a.dedup();
-
-		for element in a.into_iter()
+		// Create a hashmap with type as key and vector of uuids as the values that belong to that type
+		for tup in &self.node_list
 		{
-			self.uuid_map.insert(element, util::generate_uuid_v1());
+			let t = tup.2.clone();
+			let id = tup.0.clone();
+			let uuid = self.uuid_map.get(&id).unwrap();
+
+			// Search type_map for a type that has been read from node_list. If it exists already
+			// push the next id into its value vector
+			self.type_map.entry(t.clone());
+
+			if let Some(x) = self.type_map.get_mut(&t) {
+    			x.push(*uuid);
+			}
 		}
 
-		println!("{:#?}", self.uuid_map);
+
+		println!("{:#?}", self.type_map);
 		Ok(true)
 	}
 }

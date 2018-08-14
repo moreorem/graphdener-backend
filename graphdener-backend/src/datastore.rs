@@ -30,7 +30,7 @@ macro_rules! proxy_transaction {
     ($this: expr, $name:ident, $($arg:tt)*) => (
         {
             match *$this {
-                ProxyTransaction::Rocksdb(ref r) => r.$name($($arg)*),
+                // ProxyTransaction::Rocksdb(ref r) => r.$name($($arg)*),
                 ProxyTransaction::Memory(ref mem) => mem.$name($($arg)*)
             }
         }
@@ -39,7 +39,6 @@ macro_rules! proxy_transaction {
 
 #[derive(Debug)]
 pub enum ProxyTransaction {
-    Rocksdb(RocksdbTransaction),
     Memory(MemoryTransaction),
 }
 
@@ -113,20 +112,7 @@ impl Transaction for ProxyTransaction {
 pub fn datastore() -> ProxyDatastore {
     let connection_string = env::var("DATABASE_URL").unwrap_or_else(|_| "memory://".to_string());
 
-    if connection_string.starts_with("rocksdb://") {
-        let path = &connection_string[10..connection_string.len()];
-
-        let max_open_files_str = env::var("ROCKSDB_MAX_OPEN_FILES").unwrap_or_else(|_| "512".to_string());
-        let max_open_files = max_open_files_str.parse::<i32>().expect(
-            "Could not parse environment variable `ROCKSDB_MAX_OPEN_FILES`: must be an \
-             i32",
-        );
-
-        let datastore = RocksdbDatastore::new(path, Some(max_open_files))
-            .expect("Expected to be able to create the RocksDB datastore");
-
-        ProxyDatastore::Rocksdb(datastore)
-    } else if connection_string == "memory://" {
+    if connection_string == "memory://" {
         let datastore = MemoryDatastore::default();
         ProxyDatastore::Memory(datastore)
     } else {

@@ -17,8 +17,8 @@ impl Commands
     pub fn import_paths(path: &Vec<Value>) -> Result<Value, Value>
     {
         // Define path of edgelist
-        let edge_list_path = path[0].as_str();
-        let node_list_path = path[1].as_str();
+        let node_list_path = path[0].as_str();
+        let edge_list_path = path[1].as_str();
         
         // Define path of communities
         // -------------------------
@@ -29,7 +29,9 @@ impl Commands
         let msg = format!("{}{}{}", "Imported ", paths_number, " paths");
 
         // Parse file to filehandling function
+        filehandling::import_vertices(node_list_path.unwrap());
         filehandling::import_edges(edge_list_path.unwrap());
+
 
         Ok(Value::from(msg))
     }

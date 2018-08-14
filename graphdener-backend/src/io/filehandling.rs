@@ -15,11 +15,10 @@ use statics;
 pub fn import_edges(path: &str) -> io::Result<bool>
 {
 	let file = File::open(path)?;
-
+	let from_to: (u32, u32);
 
 	// Regular expression pattern for edge list
 	let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
-	let mut from_to: (u32, u32);
 
 	// Create temporary collection to handle import
 	let mut relation_table = EdgeImporter::new();
@@ -31,10 +30,8 @@ pub fn import_edges(path: &str) -> io::Result<bool>
 		for caps in re.captures_iter(&String::from(line.unwrap())) 
 		{
 			// Distinguish id columns and store them separately
-			from_to = (caps.get(1).unwrap().as_str().parse::<u32>().unwrap(), caps.get(2).unwrap().as_str().parse::<u32>().unwrap());
+			let from_to = (caps.get(1).unwrap().as_str().parse::<u32>().unwrap(), caps.get(2).unwrap().as_str().parse::<u32>().unwrap());
 			relation_table.update(from_to);
-
-
 		}
 		// for loop to use on another thread
 	}
@@ -50,9 +47,7 @@ pub fn import_vertices(path: &str) -> io::Result<bool>
 {
 	let file = File::open(path)?;
 	let re = Regex::new(r"(\d+)[ \t]+(\d+)[ \t]+(\d+)").unwrap();
-
-	let mut id_label_type: (u32, &str, &str);
-
+	let mut col: String;
 	// Create temporary collection to handle import
 	let mut relation_table = NodeImporter::new();
 
@@ -60,17 +55,16 @@ pub fn import_vertices(path: &str) -> io::Result<bool>
 
 	for line in BufReader::new(file).lines()
 	{
-		for caps in re.captures_iter(&String::from(line.unwrap())) 
+		// let line = line.unwrap();
+		for caps in re.captures_iter(&String::from(line.unwrap()))
 		{
 			// Distinguish id columns and store them separately
-			id_label_type = (caps.get(1).unwrap().as_str().parse::<u32>().unwrap(),
-							caps.get(2).unwrap().as_str(),
-							caps.get(3).unwrap().as_str());
+			let id_label_type = (caps.get(1).unwrap().as_str().parse::<u32>().unwrap(),	caps.get(2).unwrap().as_str(), caps.get(3).unwrap().as_str());
 			relation_table.update(id_label_type);
 		}
-		// for loop to use on another thread
 	}
+	relation_table.generate_id_map();
 
-	relation_table.create_vertices(Some(&String::from("ego")));
+	relation_table.generate_type_map();
 	Ok(true)
 }
