@@ -7,40 +7,27 @@ use indradb::{Datastore, Transaction, Type, Edge, EdgeKey, Vertex, VertexQuery};
 use statics;
 
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
-
-enum ReprMethod
-{
-	EdgeList,
-	AdjMatrix,
-	AdjList,
-}
-
-pub struct NodeRelations
+pub struct EdgeImporter
 {
 	pub edge_list: Vec<(u32, u32)>,
-	representation_type: ReprMethod,
 	uuid_map: HashMap<u32, Uuid>
-
 }
 
-
-impl NodeRelations
+impl EdgeImporter
 {
-	pub fn new() -> NodeRelations
+	pub fn new() -> EdgeImporter
 	{
-		// let el =  elist ;
-		NodeRelations { edge_list: Vec::new(), representation_type: ReprMethod::EdgeList, uuid_map: HashMap::new() }
+		EdgeImporter { edge_list: Vec::new(), uuid_map: HashMap::new() }
 	}
-
 
 	pub fn update(&mut self, conn: (u32, u32) )
 	{
 		self.edge_list.push(conn);
 	}
 
-
 	// create a map to translate imported ids into uuids
-	pub fn generate_id_map(&mut self) -> Result<bool, bool> //Vec<(u32, Uuid)>
+	// Use this only when the data are imported only from an edge list file
+	pub fn generate_id_map(&mut self) -> Result<bool, bool>
 	{
 		let mut a: Vec<u32> = Vec::new();
 
@@ -63,13 +50,12 @@ impl NodeRelations
 		Ok(true)
 	}
 
-
+	// Use this method only when there is only an edge list file
 	pub fn create_vertices(&self, vertex_type: Option<&String>) -> ()
 	{
         println!("Storing vertices to database...");
         let trans = statics::DATASTORE.transaction().unwrap();
         let mut v: Vertex;
-        // let mut e: EdgeKey;
 
         let mut uuid_list: Vec<&Uuid> = Vec::new();
 
@@ -90,15 +76,20 @@ impl NodeRelations
         println!("{:?}", msg);
 	}
 
-	pub fn initialize_spatial(&self)
-    {
-        let trans = statics::DATASTORE.transaction().unwrap();
-        let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
-        trans.set_vertex_metadata(&v, "pos", &json!([0.,0.]));
-        trans.set_vertex_metadata(&v, "size", &json!(1.));
-        trans.set_vertex_metadata(&v, "color", &json!((165,0,255)));
-    }
+	
+}
+// Combine information about vertex connections and x,y positions and create a list of tuples that contain 
+// (from_posx,from_posy,to_posx,to_posy)
 
+pub struct NodeImporter
+{
+	node_list: Vec<(u32, &str, &str)>,
+	label_list: Vec<String>
+	uuid_map: HashMap<u32, Uuid>
+}
+
+impl NodeImporter
+{
 	fn get_type(&self) -> &str
 	{
 		match self.representation_type
@@ -108,6 +99,62 @@ impl NodeRelations
 			ReprMethod::AdjList => "Adjacency List"
 		}
 	}
+
+	pub fn update(&mut self, id_label_type: (u32, &str, &str) )
+	{
+		self.node_list.push(id_label_type);
+	}
+
+	pub fn generate_id_map(&mut self) -> Result<bool, bool>
+	{
+		let mut a: Vec<u32> = Vec::new();
+
+		for tup in &self.node_list
+		{
+			a.push(tup.0);
+		}
+
+		// probably would be faster if map function is used
+		a.sort();
+
+		for element in a.into_iter()
+		{
+			self.uuid_map.insert(element, util::generate_uuid_v1());
+		}
+
+		println!("{:#?}", self.uuid_map);
+		Ok(true)
+	}
+
+	pub fn generate_type_map(&mut self) -> Result<bool, bool>
+	{
+		let mut a: Vec<u32> = Vec::new();
+
+		for tup in &self.type_list
+		{
+			a.push(tup.0);
+			a.push(tup.1);
+		}
+
+		// probably would be faster if map function is used
+		a.sort();
+		a.dedup();
+
+		for element in a.into_iter()
+		{
+			self.uuid_map.insert(element, util::generate_uuid_v1());
+		}
+
+		println!("{:#?}", self.uuid_map);
+		Ok(true)
+	}
 }
-// Combine information about vertex connections and x,y positions and create a list of tuples that contain 
-// (from_posx,from_posy,to_posx,to_posy)
+
+pub fn initialize_spatial(&self)
+{
+    let trans = statics::DATASTORE.transaction().unwrap();
+    let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
+    trans.set_vertex_metadata(&v, "pos", &json!([0.,0.]));
+    trans.set_vertex_metadata(&v, "size", &json!(1.));
+    trans.set_vertex_metadata(&v, "color", &json!((165,0,255)));
+}

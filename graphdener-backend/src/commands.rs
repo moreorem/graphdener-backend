@@ -18,7 +18,8 @@ impl Commands
     {
         // Define path of edgelist
         let edge_list_path = path[0].as_str();
-
+        let node_list_path = path[1].as_str();
+        
         // Define path of communities
         // -------------------------
 
