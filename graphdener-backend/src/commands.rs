@@ -29,9 +29,14 @@ impl Commands
         let msg = format!("{}{}{}", "Imported ", paths_number, " paths");
 
         // Parse file to filehandling function
-        filehandling::import_vertices(node_list_path.unwrap());
-        filehandling::import_edges(edge_list_path.unwrap());
 
+        // Handle the possibility of not setting a node filepath
+        if let Some(node_list_path) = node_list_path {
+            filehandling::import_vertices(node_list_path);
+        }
+        if let Some(edge_list_path) = edge_list_path {
+            filehandling::import_edges(edge_list_path);
+        }
 
         Ok(Value::from(msg))
     }

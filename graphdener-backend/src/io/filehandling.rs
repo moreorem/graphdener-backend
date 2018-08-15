@@ -18,6 +18,7 @@ pub fn import_edges(path: &str) -> io::Result<bool>
 	let from_to: (u32, u32);
 
 	// Regular expression pattern for edge list
+	// TODO: Make regular expression customizable according to frontend input
 	let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
 
 	// Create temporary collection to handle import
@@ -46,22 +47,30 @@ pub fn import_edges(path: &str) -> io::Result<bool>
 pub fn import_vertices(path: &str) -> io::Result<bool>
 {
 	let file = File::open(path)?;
-	let re = Regex::new(r"(\d+)[ \t]+(\d+)[ \t]+(\d+)").unwrap();
-	let mut col: String;
+	// TODO: Make regular expression customizable according to frontend input
+	let re = Regex::new(r#"^(?P<id>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)""#).unwrap();
 	// Create temporary collection to handle import
 	let mut relation_table = NodeImporter::new();
-
+	println!("{:?}", re);
 	println!("Parsing file {}", path);
 
 	for line in BufReader::new(file).lines()
 	{
-		// let line = line.unwrap();
-		for caps in re.captures_iter(&String::from(line.unwrap()))
-		{
-			// Distinguish id columns and store them separately
-			let id_label_type = (caps.get(1).unwrap().as_str().parse::<u32>().unwrap(),	caps.get(2).unwrap().as_str(), caps.get(3).unwrap().as_str());
-			relation_table.update(id_label_type);
-		}
+		// println!("{:?}", line);
+		println!("{:?}", &re.captures(&String::from(line.unwrap())).unwrap()["label"]);
+		// TODO: Cleanup
+		// TODO: Set elements into tuple
+		// println!("{:?}", &caps["id"]);
+		// println!("{:?}", &caps["label"]);
+		// println!("{:?}", &caps["type"]);
+
+
+		// Distinguish id columns and store them separately
+		// let id_label_type: (u32, &str, &str) = (caps.get(1).unwrap().as_str().parse::<u32>().expect("expected digit"),	
+		// 										caps.get(2).expect("expected word").as_str(), 
+		// 										caps.get(3).expect("expected second word").as_str());
+		// relation_table.update(id_label_type);
+		
 	}
 	relation_table.generate_id_map();
 
