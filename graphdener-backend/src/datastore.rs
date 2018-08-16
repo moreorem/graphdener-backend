@@ -1,4 +1,4 @@
-use indradb::{
+use graphdener::{
     Datastore, Edge, EdgeDirection, EdgeKey, EdgeMetadata, EdgeQuery, Error, MemoryDatastore, MemoryTransaction,
     Transaction, Type, Vertex, VertexMetadata, VertexQuery, 
 };

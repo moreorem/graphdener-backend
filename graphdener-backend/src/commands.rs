@@ -1,6 +1,6 @@
 use rmp_rpc::Value;
 use io::filehandling;
-use indradb::{Datastore, Transaction, Type, EdgeKey, VertexQuery, Vertex, util::generate_uuid_v1};
+use graphdener::{Datastore, Transaction, Type, EdgeKey, VertexQuery, Vertex, util::generate_uuid_v1};
 // use datastore::ProxyDatastore;
 use statics;
 use std::iter::Iterator;

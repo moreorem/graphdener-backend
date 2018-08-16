@@ -56,24 +56,21 @@ pub fn import_vertices(path: &str) -> io::Result<bool>
 
 	for line in BufReader::new(file).lines()
 	{
-		// println!("{:?}", line);
-		println!("{:?}", &re.captures(&String::from(line.unwrap())).unwrap()["label"]);
+		let line_string = &String::from(line.unwrap());
+		let caps = re.captures(line_string).unwrap();
 		// TODO: Cleanup
 		// TODO: Set elements into tuple
-		// println!("{:?}", &caps["id"]);
-		// println!("{:?}", &caps["label"]);
-		// println!("{:?}", &caps["type"]);
-
 
 		// Distinguish id columns and store them separately
-		// let id_label_type: (u32, &str, &str) = (caps.get(1).unwrap().as_str().parse::<u32>().expect("expected digit"),	
-		// 										caps.get(2).expect("expected word").as_str(), 
-		// 										caps.get(3).expect("expected second word").as_str());
-		// relation_table.update(id_label_type);
+		let id_label_type: (u32, &str, &str) = (caps["id"].parse::<u32>().expect("expected digit"),	
+												&caps["label"], 
+												&caps["type"]);
+		relation_table.update(id_label_type);
 		
 	}
 	relation_table.generate_id_map();
 
 	relation_table.generate_type_map();
+	relation_table.create_vertices();
 	Ok(true)
 }

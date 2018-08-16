@@ -1,9 +1,9 @@
-use indradb::util::generate_uuid_v1;
+use graphdener::util::generate_uuid_v1;
 use uuid::Uuid;
 use std::collections::HashMap;
-use indradb::util;
+use graphdener::util;
 use serde_json::Value;
-use indradb::{Datastore, Transaction, Type, Edge, EdgeKey, Vertex, VertexQuery};
+use graphdener::{Datastore, Transaction, Type, Edge, EdgeKey, Vertex, VertexQuery};
 use statics;
 
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
@@ -46,7 +46,7 @@ impl EdgeImporter
 			self.uuid_map.insert(element, util::generate_uuid_v1());
 		}
 
-		println!("{:#?}", self.uuid_map);
+		println!("IdMap: {:#?}", self.uuid_map);
 		Ok(true)
 	}
 
@@ -84,7 +84,6 @@ impl EdgeImporter
 pub struct NodeImporter
 {
 	node_list: Vec<(u32, String, String)>,
-	label_list: Vec<String>,
 	type_map: HashMap<String, Vec<Uuid>>,
 	uuid_map: HashMap<u32, Uuid>
 }
@@ -94,7 +93,6 @@ impl NodeImporter
 	pub fn new() -> NodeImporter
 	{
 		NodeImporter {	node_list: Vec::new(),
-						label_list: Vec::new(),
 						type_map: HashMap::new(),
 						uuid_map: HashMap::new() }
 	}
@@ -120,39 +118,68 @@ impl NodeImporter
 
 		for element in a.into_iter()
 		{
-			self.uuid_map.insert(element, util::generate_uuid_v1());
+			&self.uuid_map.insert(element, util::generate_uuid_v1());
 		}
 
-		println!("{:#?}", self.uuid_map);
 		Ok(true)
 	}
 
 
 	pub fn generate_type_map(&mut self) -> Result<bool, bool>
 	{
-		// generate a map with the imported ids and uuids
-		let mut a: Vec<Uuid> = Vec::new();
 
 		// Create a hashmap with type as key and vector of uuids as the values that belong to that type
 		for tup in &self.node_list
 		{
 			let t = tup.2.clone();
 			let id = tup.0.clone();
-			let uuid = self.uuid_map.get(&id).unwrap();
+			let uuid = *self.uuid_map.get(&id).unwrap();
+			let mut last_entry: Vec<Uuid>;
 
 			// Search type_map for a type that has been read from node_list. If it exists already
 			// push the next id into its value vector
-			self.type_map.entry(t.clone());
-
-			if let Some(x) = self.type_map.get_mut(&t) {
-    			x.push(*uuid);
+			if let Some(x) = &self.type_map.get(&t) {
+				last_entry = x.to_vec();
 			}
+			else {
+				last_entry = Vec::new();
+			}
+
+			last_entry.push(uuid);
+
+			&self.type_map.insert(t, last_entry);
 		}
 
 
-		println!("{:#?}", self.type_map);
+		println!("TypeMap: {:#?}", &self.type_map);
 		Ok(true)
 	}
+
+	pub fn create_vertices(&self) -> ()
+	{
+        println!("Storing vertices to database...");
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let mut v: Vertex;
+
+        let mut uuid_list: Vec<&Uuid> = Vec::new();
+
+        // iterate over every uuid in the hashmap and create each unique node into the db
+        for (key,val) in self.type_map.iter()
+        {
+        	for uuid in val.iter()
+        	{
+	        	v = Vertex::with_id(*uuid, Type::new(key
+											    .to_string())
+											    .unwrap());
+
+    	    	let msg = trans.create_vertex(&v);
+    	    }
+        }
+
+		let msg = trans.get_vertex_count();
+        println!("{:?}", msg);
+	}
+
 }
 
 pub fn initialize_spatial()

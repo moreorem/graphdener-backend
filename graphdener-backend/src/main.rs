@@ -1,6 +1,6 @@
 extern crate regex;
 // server.rs externs
-extern crate indradb;
+extern crate graphdener;
 extern crate futures;
 extern crate rmp_rpc;
 extern crate tokio_core;
