@@ -1,4 +1,6 @@
 use rmp_rpc::Value;
+use rand::prelude::*;
+
 use io::filehandling;
 use graphdener::{Datastore, Transaction, Type, EdgeKey, VertexQuery, Vertex, util::generate_uuid_v1};
 // use datastore::ProxyDatastore;
@@ -37,30 +39,10 @@ impl Commands
         if let Some(edge_list_path) = edge_list_path {
             filehandling::import_edges(edge_list_path);
         }
-
         Ok(Value::from(msg))
     }
 
-    // pub fn initialize(datastore_type: &str) -> Result<Value, Value>
-    // {
-    //     println!("Initializing database...");
-    //     let msg: Value;
-
-    //     if datastore_type == "rocksdb" {
-    //         let datastore = RocksdbDatastore::new("localhost:8888", Some(5))
-    //                         .expect("Expected to be able to create a RocksDB datastore");
-    //         ProxyDatastore::Rocksdb(datastore);
-    //         msg = Value::from("RocksDB Datastore");
-    //     }
-    //     else {
-    //         let datastore = MemoryDatastore::default();
-    //         ProxyDatastore::Memory(datastore);
-    //         msg = Value::from("Memory Datastore");
-    //     }
-
-    //     Ok(Value::from(msg))
-    // }
-
+    
     pub fn create_vertex(v_type: &str) -> Result<Value, Value>
     {
         // relational::create_vertex
@@ -72,6 +54,7 @@ impl Commands
         Ok(Value::from(msg.to_string()))
     }
 
+    // TODO: Make Getter trait for every object
   
     // Returns specific info about a set or all of the vertices that exist in the database to the frontend
     pub fn get_vertex(v_id: &[Value], info_type: &str) -> Result<Value, Value>
@@ -87,7 +70,7 @@ impl Commands
         }
 
         println!("{:#?}", v_id_list);
-
+        // FIXME: Simplify vertex query, remove some conditionals
         if v_id.len() > 0
         {
             v = VertexQuery::Vertices{ ids: v_id_list };
@@ -113,11 +96,10 @@ impl Commands
         // return the array of specific detail type for all of the selected vertices according to the command
         match info_type
         {
-            // "position" => Value::Array( r_iter.map(|x| Value::Array(vec![Value::from(x.pos[0]), Value::from(x.pos[1])]) ).collect() ) ,
             "type" => Value::Array( r_iter.map( |x| Value::from(x.t.0.to_owned()) ).collect() ),
-            "pos" => Value::Array(Commands::get_spatial("pos")),
-            "size" => Value::Array(Commands::get_spatial("size")),
-            "color" => Value::Array(Commands::get_spatial("color")),
+            "pos" => Value::Array(Commands::get_attribute("pos")),
+            "size" => Value::Array(Commands::get_attribute("size")),
+            "color" => Value::Array(Commands::get_attribute("color")),
             // "label" => Value::Array( r_iter.map( |x| Value::from(x.label.to_owned().unwrap()) ).collect() ),
             _ => Value::from("error")
 
@@ -132,7 +114,7 @@ impl Commands
             "vert" => Value::Boolean(Commands::get_vert().unwrap()),
             _ => Value::Boolean(false)
         };
-        Ok(Value::from("e") )// TEMPORARY
+        Ok(Value::from("e") ) // FIXME: this
     }
 
 
@@ -152,14 +134,17 @@ impl Commands
         Ok(true)
     }
 
+    // Returns the edge list, adjacency matrix or adjacency list in order to draw the graph
     pub fn get_connections() -> Result<Value, Value>
     {
-        // Returns the edge list, adjacency matrix or adjacency list in order to draw the graph
         Ok(Value::from("test"))
     }
 
-    fn get_spatial(kind: &str) -> Vec<Value>
+    // Returns one of the attributes that reside in the metadata map of each vertex
+    fn get_attribute(kind: &str) -> Vec<Value>
     {
+        Commands::set_pos();
+        
         let trans = statics::DATASTORE.transaction().unwrap();
         let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
         let t = match kind
@@ -177,7 +162,7 @@ impl Commands
     pub fn update(field: &str, values: &[Value]) -> Result<Value, Value>
     {
         match field {
-            "pos" => Commands::set_pos(values),
+            "pos" => Commands::set_pos(),
             _ => panic!("unknown attribute")
 
         }
@@ -185,10 +170,24 @@ impl Commands
         Ok(Value::from("ok"))
     }
 
-    fn set_pos(v: &[Value])
+    fn set_pos()
     {
+        let mut rng = thread_rng();
+
         let trans = statics::DATASTORE.transaction().unwrap();
-        // trans.get_vertex_metadata(&v, "pos").unwrap();
+        let mut x: f64;
+        let mut y: f64;
+
+        for vert in trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 10000000 }).unwrap().iter()
+        {
+            x = rng.gen();
+            y = rng.gen();
+            let v = VertexQuery::Vertices{ ids: vec!(vert.id) };
+            trans.set_vertex_metadata(&v, "pos", &json!([x, y]));
+            // trans.get_vertex_metadata(&v, "pos").unwrap();
+            // TESTME: use random values for position in order to print the nodes on the canvas
+           
+        }
     }
 
     

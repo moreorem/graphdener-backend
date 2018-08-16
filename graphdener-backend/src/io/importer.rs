@@ -5,7 +5,6 @@ use graphdener::util;
 use serde_json::Value;
 use graphdener::{Datastore, Transaction, Type, Edge, EdgeKey, Vertex, VertexQuery};
 use statics;
-
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
 pub struct EdgeImporter
 {
@@ -182,11 +181,12 @@ impl NodeImporter
 
 }
 
+// Initializes the vertex attributes to be changed in every frame
 pub fn initialize_spatial()
 {
     let trans = statics::DATASTORE.transaction().unwrap();
     let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
-    trans.set_vertex_metadata(&v, "pos", &json!([0.,0.]));
+    trans.set_vertex_metadata(&v, "pos", &json!([0., 0.]));
     trans.set_vertex_metadata(&v, "size", &json!(1.));
     trans.set_vertex_metadata(&v, "color", &json!((165,0,255)));
 }

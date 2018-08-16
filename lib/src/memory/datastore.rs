@@ -412,6 +412,8 @@ impl Transaction for MemoryTransaction {
         Ok(result)
     }
 
+    // TODO: Make a function that sets an array of x,y arrays for all of the vertices at once
+    
     fn set_vertex_metadata(&self, q: &VertexQuery, name: &str, value: &JsonValue) -> Result<()> {
         let mut datastore = self.datastore.write().unwrap();
 

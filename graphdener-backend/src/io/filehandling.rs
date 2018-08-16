@@ -72,5 +72,8 @@ pub fn import_vertices(path: &str) -> io::Result<bool>
 
 	relation_table.generate_type_map();
 	relation_table.create_vertices();
+	
+	initialize_spatial();
+
 	Ok(true)
 }
