@@ -100,7 +100,7 @@ impl Commands
             "pos" => Value::Array(Commands::get_attribute("pos")),
             "size" => Value::Array(Commands::get_attribute("size")),
             "color" => Value::Array(Commands::get_attribute("color")),
-            // "label" => Value::Array( r_iter.map( |x| Value::from(x.label.to_owned().unwrap()) ).collect() ),
+            "label" => Value::Array(Commands::get_attribute("label")),
             _ => Value::from("error")
 
         }
@@ -143,7 +143,7 @@ impl Commands
     // Returns one of the attributes that reside in the metadata map of each vertex
     fn get_attribute(kind: &str) -> Vec<Value>
     {
-        Commands::set_pos();
+        Commands::set_random_pos();
         
         let trans = statics::DATASTORE.transaction().unwrap();
         let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
@@ -152,6 +152,7 @@ impl Commands
             "pos" => trans.get_vertex_metadata(&v, "pos").unwrap(),
             "size" => trans.get_vertex_metadata(&v, "size").unwrap(),
             "color" => trans.get_vertex_metadata(&v, "color").unwrap(),
+            "label" => trans.get_vertex_metadata(&v, "label").unwrap(),
             _ => vec!()
         };
 
@@ -162,7 +163,7 @@ impl Commands
     pub fn update(field: &str, values: &[Value]) -> Result<Value, Value>
     {
         match field {
-            "pos" => Commands::set_pos(),
+            "pos" => Commands::set_random_pos(),
             _ => panic!("unknown attribute")
 
         }
@@ -170,7 +171,7 @@ impl Commands
         Ok(Value::from("ok"))
     }
 
-    fn set_pos()
+    fn set_random_pos()
     {
         let mut rng = thread_rng();
 

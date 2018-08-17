@@ -10,7 +10,7 @@ use uuid::Uuid;
 pub struct Vertex {
     /// The id of the vertex.
     pub id: Uuid,
-
+    // TODO: Create a label field somehow
     /// The type of the vertex.
     #[serde(rename = "type")]
     pub t: Type,

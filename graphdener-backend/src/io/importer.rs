@@ -117,8 +117,11 @@ impl NodeImporter
 
 		for element in a.into_iter()
 		{
-			&self.uuid_map.insert(element, util::generate_uuid_v1());
+			let uuid = util::generate_uuid_v1();
+			&self.uuid_map.insert(element, uuid);
 		}
+
+    	
 
 		Ok(true)
 	}
@@ -126,7 +129,6 @@ impl NodeImporter
 
 	pub fn generate_type_map(&mut self) -> Result<bool, bool>
 	{
-
 		// Create a hashmap with type as key and vector of uuids as the values that belong to that type
 		for tup in &self.node_list
 		{
@@ -175,6 +177,7 @@ impl NodeImporter
     	    }
         }
 
+
 		let msg = trans.get_vertex_count();
         println!("{:?}", msg);
 	}
@@ -189,4 +192,6 @@ pub fn initialize_spatial()
     trans.set_vertex_metadata(&v, "pos", &json!([0., 0.]));
     trans.set_vertex_metadata(&v, "size", &json!(1.));
     trans.set_vertex_metadata(&v, "color", &json!((165,0,255)));
+    trans.set_vertex_metadata(&v, "label", &json!(""));
+
 }
