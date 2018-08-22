@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use rmp_rpc::Value;
 use rand::prelude::*;
 
@@ -14,31 +15,32 @@ pub struct Commands;
 
 impl Commands
 {
-
+    // TODO: Implement uuid_map as a struct in models
     // Improved import function to accept an array of paths
     pub fn import_paths(path: &Vec<Value>) -> Result<Value, Value>
     {
         // Define path of edgelist
         let node_list_path = path[0].as_str();
         let edge_list_path = path[1].as_str();
-        
+
         // Define path of communities
         // -------------------------
-
+    
         // Count number of paths to import
         let paths_number = path.iter().count();
         
         let msg = format!("{}{}{}", "Imported ", paths_number, " paths");
 
+        let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
         // Parse file to filehandling function
 
         // Handle the possibility of not setting a node filepath
         if let Some(node_list_path) = node_list_path {
-            filehandling::import_vertices(node_list_path);
+            filehandling::import_vertices(node_list_path, &mut uuid_map);
         }
-        if let Some(edge_list_path) = edge_list_path {
-            filehandling::import_edges(edge_list_path);
-        }
+        // if let Some(edge_list_path) = edge_list_path {
+        //     filehandling::import_edges(edge_list_path, &uuid_map);
+        // }
         Ok(Value::from(msg))
     }
 

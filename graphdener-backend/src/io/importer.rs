@@ -1,12 +1,12 @@
 use uuid::Uuid;
 use std::collections::HashMap;
 use graphdener::util;
-use graphdener::{Datastore, Transaction, Type, Vertex, VertexQuery};
+use graphdener::{Datastore, Transaction, Type, Vertex, EdgeKey, VertexQuery, EdgeDirection};
 use statics;
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
 pub struct EdgeImporter
 {
-	pub edge_list: Vec<(u32, u32)>,
+	pub edge_list: Vec<(u32, u32, u32, String, String, u8)>,
 	uuid_map: HashMap<u32, Uuid>
 }
 
@@ -17,72 +17,75 @@ impl EdgeImporter
 		EdgeImporter { edge_list: Vec::new(), uuid_map: HashMap::new() }
 	}
 
-	pub fn update(&mut self, conn: (u32, u32) )
+	pub fn update(&mut self, conn: (u32, u32, u32, &str, &str, u8) )
 	{
-		self.edge_list.push(conn);
+		let a = (conn.0, conn.1, conn.2, conn.3.to_string(), conn.4.to_string(), conn.5);
+		self.edge_list.push(a);
 	}
 
 	// create a map to translate imported ids into uuids
 	// Use this only when the data are imported only from an edge list file
-	pub fn generate_id_map(&mut self) -> Result<bool, bool>
-	{
-		let mut a: Vec<u32> = Vec::new();
+	// pub fn generate_id_map(&mut self) -> Result<bool, bool>
+	// {
+	// 	let mut a: Vec<u32> = Vec::new();
 
-		for tup in &self.edge_list
-		{
-			a.push(tup.0);
-			a.push(tup.1);
-		}
+	// 	for tup in &self.edge_list
+	// 	{
+	// 		a.push(tup.0);
+	// 		a.push(tup.1);
+	// 	}
 
-		// probably would be faster if map function is used
-		a.sort();
-		a.dedup();
+	// 	// probably would be faster if map function is used
+	// 	a.sort();
+	// 	a.dedup();
 
-		for element in a.into_iter()
-		{
-			self.uuid_map.insert(element, util::generate_uuid_v1());
-		}
+	// 	for element in a.into_iter()
+	// 	{
+	// 		self.uuid_map.insert(element, util::generate_uuid_v1());
+	// 	}
 
-		println!("IdMap: {:#?}", self.uuid_map);
-		Ok(true)
-	}
+	// 	println!("IdMap: {:#?}", self.uuid_map);
+	// 	Ok(true)
+	// }
 
 	// Use this method only when there is only an edge list file
-	pub fn create_vertices(&self, vertex_type: Option<&String>) -> ()
+	pub fn create_edges(&self, uuid_map: &HashMap<u32, Uuid>) -> ()
 	{
-        println!("Storing vertices to database...");
+        println!("Storing edges to database...");
         let trans = statics::DATASTORE.transaction().unwrap();
-        let mut v: Vertex;
-
-        let mut uuid_list: Vec<&Uuid> = Vec::new();
+        let mut e: EdgeKey;
 
         // iterate over every uuid in the hashmap and create each unique node into the db
-        for val in self.uuid_map.values()
+        for val in self.edge_list.iter()
         {
-        	uuid_list.push(val);
-        	v = Vertex::with_id(*val, Type::new(vertex_type
-												.unwrap_or(&String::from("unknown"))
-											    .to_string())
-											    .unwrap());
+        	// uuid_list.push(val);
+        	let target = uuid_map.get(&val.2).unwrap();
+        	let source = uuid_map.get(&val.1).unwrap();
+        	let t = Type::new(val.4.to_owned()).unwrap();
+        	e = EdgeKey::new(*target, t, *source);
 
-        	let msg = trans.create_vertex(&v);
-
+        	trans.create_edge(&e);
         }
 
-		let msg = trans.get_vertex_count();
-        println!("{:?}", msg);
+        // TESTING
+        for id in uuid_map.values()
+        {
+        	let msg = trans.get_edge_count(*id, None, EdgeDirection::Outbound);
+        	println!("{:?}", msg);
+        }
+
+		
 	}
 
 	
 }
-// Combine information about vertex connections and x,y positions and create a list of tuples that contain 
-// (from_posx,from_posy,to_posx,to_posy)
+
 
 pub struct NodeImporter
 {
 	node_list: Vec<(u32, String, String)>,
 	type_map: HashMap<String, Vec<Uuid>>,
-	uuid_map: HashMap<u32, Uuid>
+	uuid_map: HashMap<u32, Uuid> // PENDING: Deprecated delete if sure
 }
 
 impl NodeImporter
@@ -91,7 +94,8 @@ impl NodeImporter
 	{
 		NodeImporter {	node_list: Vec::new(),
 						type_map: HashMap::new(),
-						uuid_map: HashMap::new() }
+						uuid_map: HashMap::new()
+					}
 	}
 
 	pub fn update(&mut self, id_label_type: (u32, &str, &str) )
@@ -100,9 +104,10 @@ impl NodeImporter
 		self.node_list.push(a);
 	}
 
-	pub fn generate_id_map(&mut self) -> Result<bool, bool>
+	pub fn generate_id_map(&mut self) -> Result<HashMap<u32, Uuid>, bool>
 	{
 		let mut a: Vec<u32> = Vec::new();
+		let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
 
 		for tup in &self.node_list
 		{
@@ -116,9 +121,12 @@ impl NodeImporter
 		for element in a.into_iter()
 		{
 			let uuid = util::generate_uuid_v1();
-			&self.uuid_map.insert(element, uuid);
+			uuid_map.insert(element, uuid);
 		}
-		Ok(true)
+
+		// Update instance map
+		self.uuid_map = uuid_map.clone();
+		Ok(uuid_map)
 	}
 
 

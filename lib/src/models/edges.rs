@@ -3,6 +3,7 @@ use chrono::DateTime;
 use chrono::offset::Utc;
 use uuid::Uuid;
 
+
 /// Represents a uniquely identifiable key to an edge.
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct EdgeKey {
@@ -12,7 +13,7 @@ pub struct EdgeKey {
     /// The type of the edge.
     #[serde(rename = "type")]
     pub t: Type,
-
+    // TODO: Add weight attribute
     /// The id of the inbound vertex.
     pub inbound_id: Uuid,
 }
