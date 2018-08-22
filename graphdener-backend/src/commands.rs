@@ -156,7 +156,7 @@ impl Commands
             _ => vec!()
         };
 
-        t.iter().map(|x| Value::from(x.value.to_string())).collect()
+        t.iter().map(|x| Value::from(x.value.to_string())).collect() // TODO: Find a way to return a float instead of string
 
     }
 

@@ -120,9 +120,6 @@ impl NodeImporter
 			let uuid = util::generate_uuid_v1();
 			&self.uuid_map.insert(element, uuid);
 		}
-
-    	
-
 		Ok(true)
 	}
 
