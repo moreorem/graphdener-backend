@@ -1,9 +1,7 @@
-use graphdener::util::generate_uuid_v1;
 use uuid::Uuid;
 use std::collections::HashMap;
 use graphdener::util;
-use serde_json::Value;
-use graphdener::{Datastore, Transaction, Type, Edge, EdgeKey, Vertex, VertexQuery};
+use graphdener::{Datastore, Transaction, Type, Vertex, VertexQuery};
 use statics;
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
 pub struct EdgeImporter

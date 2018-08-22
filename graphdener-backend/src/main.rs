@@ -23,7 +23,6 @@ use tokio_core::reactor::Core;
 
 mod server;
 mod statics;
-mod datastore;
 mod io;
 mod commands;
 
@@ -42,6 +41,7 @@ enum ColumnSeparator
 
 fn main() 
 {
+    // TODO: Add console argument to be used as address
 	println!("running server...");
 	let addr: SocketAddr = "127.0.0.1:54321".parse().unwrap();
     // Create a tokio event loop.
