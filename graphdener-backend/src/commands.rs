@@ -1,3 +1,4 @@
+use graphdener::Edge;
 use std::collections::HashMap;
 use rmp_rpc::Value;
 use rand::prelude::*;
@@ -10,6 +11,21 @@ use std::iter::Iterator;
 use uuid::Uuid;
 
 
+enum Unit<Info>
+{
+    EdgeUnit(Info),
+    VertUnit(Info)
+}
+
+pub trait Info<Unit>{
+    fn get() -> Value
+    {
+        let n = [3;1];
+        Value::Array(vec!(Value::from(1)))
+    }
+}    
+
+
 // Here declare the functions that are going to be executed on the server
 pub struct Commands;
 
@@ -19,13 +35,11 @@ impl Commands
     // Improved import function to accept an array of paths
     pub fn import_paths(path: &Vec<Value>) -> Result<Value, Value>
     {
+        println!("{:?}", path);
         // Define path of edgelist
         let node_list_path = path[0].as_str();
         let edge_list_path = path[1].as_str();
-
-        // Define path of communities
-        // -------------------------
-    
+       
         // Count number of paths to import
         let paths_number = path.iter().count();
         
@@ -38,22 +52,10 @@ impl Commands
         if let Some(node_list_path) = node_list_path {
             filehandling::import_vertices(node_list_path, &mut uuid_map);
         }
-        // if let Some(edge_list_path) = edge_list_path {
-        //     filehandling::import_edges(edge_list_path, &uuid_map);
-        // }
+        if let Some(edge_list_path) = edge_list_path {
+            filehandling::import_edges(edge_list_path, &uuid_map);
+        }
         Ok(Value::from(msg))
-    }
-
-    
-    pub fn create_vertex(v_type: &str) -> Result<Value, Value>
-    {
-        // relational::create_vertex
-        println!("Creating vertex...");
-        // let trans = statics::DATASTORE.transaction().unwrap();
-
-        let msg = String::from("ok");
-        
-        Ok(Value::from(msg.to_string()))
     }
 
     // TODO: Make Getter trait for every object
@@ -84,16 +86,16 @@ impl Commands
             println!("all vertices");
         }
         // In this case the msg variable is of type model::Vertex. It has to be broken into the struct items to be used
-        let response = trans.get_vertices(&v).unwrap();
+        let draft_info = trans.get_vertices(&v).unwrap();
 
-        Ok(Commands::vert_info(info_type, response))
+        Ok(Commands::vert_info(info_type, draft_info))
     }
 
 
-    fn vert_info(info_type: &str, response: Vec<Vertex>) -> Value
+    fn vert_info(info_type: &str, draft_model: Vec<Vertex>) -> Value
     {
         // map all of the vectors in the response to one vector
-        let r_iter = response.iter();
+        let r_iter = draft_model.iter();
            
         // return the array of specific detail type for all of the selected vertices according to the command
         match info_type
@@ -108,44 +110,50 @@ impl Commands
         }
     }
 
+
     // general getter that leads to specific objects
-    pub fn get_object(obj: &str) -> Result<Value, Value>
+    pub fn get_object(obj: &str, info: &str) -> Result<Value, Value>
     {
         let r = match obj {
-            "edge" => Value::Boolean(Commands::get_edges().unwrap()),
-            "vert" => Value::Boolean(Commands::get_vert().unwrap()),
-            _ => Value::Boolean(false)
+            "edge" => Commands::get_edge(&[], info).unwrap(), //Value::Boolean(Commands::get_edge().unwrap()),
+            "vert" => Commands::get_vertex(&[], info).unwrap(), //Commands::get_vertex(&vec!(Value::from(2)), "pos"),
+            _ => Value::from("Error")
         };
-        Ok(Value::from("e") ) // FIXME: this
+        Ok(r)
     }
 
 
     // make a getter only for edge types, weight, direction and fromto
-    fn get_edges() -> Result<bool, bool>
+    fn get_edge(v_id: &[Value], info_type: &str) -> Result<Value, Value>
     {
-        println!("Creating edge...");
         let trans = statics::DATASTORE.transaction().unwrap();
         let edge_list_available: bool;
-
-        Ok(true)
+        let draft_info = trans.get_edges(&VertexQuery::All{start_id: None, limit: 100000000}
+                                        .outbound_edges(None, None, None, None, 1000000000) )
+                                        .unwrap();
+        println!("{:?}", draft_info);
+        Ok(Commands::edge_info(info_type, draft_info))
     }
-
-
-    fn get_vert() -> Result<bool,bool>
+ 
+    fn edge_info(info_type: &str, draft_model: Vec<Edge>) -> Value
     {
-        Ok(true)
+        // map all of the vectors in the response to one vector
+        let r_iter = draft_model.iter();
+           
+        // return the array of specific detail type for all of the selected vertices according to the command
+        match info_type
+        {
+            "type" => Value::Array( r_iter.map( |x| Value::from(x.key.t.0.to_owned() ) ).collect() ),
+            "pos" => Value::Array(Commands::get_attribute("pos")),
+            "label" => Value::Array(Commands::get_attribute("label")),
+            _ => Value::from("error")
+        }
     }
-
-    // Returns the edge list, adjacency matrix or adjacency list in order to draw the graph
-    pub fn get_connections() -> Result<Value, Value>
-    {
-        Ok(Value::from("test"))
-    }
-
+    
     // Returns one of the attributes that reside in the metadata map of each vertex
     fn get_attribute(kind: &str) -> Vec<Value>
     {
-        Commands::set_random_pos();
+        Commands::set_random_pos(); // TESTME: Delete afterwards
         
         let trans = statics::DATASTORE.transaction().unwrap();
         let v = VertexQuery::All{ start_id: None, limit: 1000000000 };

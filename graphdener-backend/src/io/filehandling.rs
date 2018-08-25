@@ -25,10 +25,8 @@ pub fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Res
 	for line in BufReader::new(file).lines()
 	{
 		let line_string = &String::from(line.unwrap());
-		let caps = re.captures(line_string).unwrap();
-		// TODO: Cleanup
-		// TODO: Set elements into tuple
-
+		let caps = re.captures(line_string).unwrap();  // FIXME: Backend panics when unwrapping empty value
+	
 		// Distinguish id columns and store them separately
 		let id_label_type: (u32, &str, &str) = (caps["id"].parse::<u32>().expect("expected digit"),	
 												&caps["label"], 
@@ -57,7 +55,7 @@ pub fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<boo
 	// TODO: Make regular expression customizable according to frontend input
 	// let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
 
-	let re = Regex::new(r#"^(?P<id>\d+)\s+(?P<source>\d+)\s+(?P<target>\d+)\s+(?P<label>\d+)\s+(?P<type>\d+)\s+(?P<weight>\d+)"#).unwrap();	
+	let re = Regex::new(r#"^(?P<id>\d+)\s+(?P<source>\d+)\s+(?P<target>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)"\s+(?P<weight>\d+)"#).unwrap();	
 	// Create temporary collection to handle import
 	let mut relation_table = EdgeImporter::new();
 
@@ -66,7 +64,7 @@ pub fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<boo
 	for line in BufReader::new(file).lines()
 	{
 		let line_string = &String::from(line.unwrap());
-		let caps = re.captures(line_string).unwrap();
+		let caps = re.captures(line_string).unwrap(); // FIXME: Backend panics when unwrapping empty value
 
 		// Distinguish id columns and store them separately
 		let from_to: (u32, u32, u32, &str, &str, u8) = (caps["id"].parse::<u32>().expect("expected digit"),
@@ -82,6 +80,5 @@ pub fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<boo
 	// relation_table.generate_id_map();
 	// Create number of vertices as many as the variety of uuids
 	relation_table.create_edges(&uuid_map);
-	initialize_spatial();
 	Ok(true)
 }

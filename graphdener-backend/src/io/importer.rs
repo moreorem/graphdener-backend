@@ -7,6 +7,7 @@ use statics;
 pub struct EdgeImporter
 {
 	pub edge_list: Vec<(u32, u32, u32, String, String, u8)>,
+
 	uuid_map: HashMap<u32, Uuid>
 }
 
@@ -67,12 +68,12 @@ impl EdgeImporter
         	trans.create_edge(&e);
         }
 
-        // TESTING
-        for id in uuid_map.values()
-        {
-        	let msg = trans.get_edge_count(*id, None, EdgeDirection::Outbound);
-        	println!("{:?}", msg);
-        }
+        // // TESTING
+        // for id in uuid_map.values()
+        // {
+        // 	let msg = trans.get_edge_count(*id, None, EdgeDirection::Outbound);
+        // 	println!("{:?}", msg);
+        // }
 
 		
 	}

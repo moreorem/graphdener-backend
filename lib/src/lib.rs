@@ -31,11 +31,6 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
 
-#[cfg(feature = "rocksdb-datastore")]
-extern crate bincode;
-#[cfg(feature = "rocksdb-datastore")]
-extern crate rocksdb;
-
 #[cfg(feature = "test-suite")]
 #[macro_use]
 pub mod tests;
@@ -54,8 +49,3 @@ pub use errors::*;
 pub use memory::{MemoryDatastore, MemoryTransaction};
 pub use models::*;
 pub use traits::*;
-
-#[cfg(feature = "rocksdb-datastore")]
-mod rdb;
-#[cfg(feature = "rocksdb-datastore")]
-pub use rdb::{RocksdbDatastore, RocksdbTransaction};
