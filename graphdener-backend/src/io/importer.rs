@@ -1,13 +1,12 @@
 use uuid::Uuid;
 use std::collections::HashMap;
 use graphdener::util;
-use graphdener::{Datastore, Transaction, Type, Vertex, EdgeKey, VertexQuery, EdgeDirection};
+use graphdener::{Datastore, Transaction, Type, EdgeKey, EdgeQuery, Vertex, VertexQuery, EdgeDirection};
 use statics;
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
 pub struct EdgeImporter
 {
 	pub edge_list: Vec<(u32, u32, u32, String, String, u8)>,
-
 	uuid_map: HashMap<u32, Uuid>
 }
 
@@ -24,37 +23,11 @@ impl EdgeImporter
 		self.edge_list.push(a);
 	}
 
-	// create a map to translate imported ids into uuids
-	// Use this only when the data are imported only from an edge list file
-	// pub fn generate_id_map(&mut self) -> Result<bool, bool>
-	// {
-	// 	let mut a: Vec<u32> = Vec::new();
-
-	// 	for tup in &self.edge_list
-	// 	{
-	// 		a.push(tup.0);
-	// 		a.push(tup.1);
-	// 	}
-
-	// 	// probably would be faster if map function is used
-	// 	a.sort();
-	// 	a.dedup();
-
-	// 	for element in a.into_iter()
-	// 	{
-	// 		self.uuid_map.insert(element, util::generate_uuid_v1());
-	// 	}
-
-	// 	println!("IdMap: {:#?}", self.uuid_map);
-	// 	Ok(true)
-	// }
-
 	// Use this method only when there is only an edge list file
 	pub fn create_edges(&self, uuid_map: &HashMap<u32, Uuid>) -> ()
 	{
         println!("Storing edges to database...");
         let trans = statics::DATASTORE.transaction().unwrap();
-        let mut e: EdgeKey;
 
         // iterate over every uuid in the hashmap and create each unique node into the db
         for val in self.edge_list.iter()
@@ -63,24 +36,18 @@ impl EdgeImporter
         	let target = uuid_map.get(&val.2).unwrap();
         	let source = uuid_map.get(&val.1).unwrap();
         	let t = Type::new(val.4.to_owned()).unwrap();
-        	e = EdgeKey::new(*target, t, *source);
+        	let l = &val.3;
+        	let w = &val.5;
+        	let e = EdgeKey::new(*target, t, *source);
 
         	trans.create_edge(&e);
+        	trans.set_edge_metadata(&EdgeQuery::Edges{keys: vec!(e.clone())}, "label", &json!(l));
+        	trans.set_edge_metadata(&EdgeQuery::Edges{keys: vec!(e)}, "weight", &json!(w));
+
         }
-
-        // // TESTING
-        // for id in uuid_map.values()
-        // {
-        // 	let msg = trans.get_edge_count(*id, None, EdgeDirection::Outbound);
-        // 	println!("{:?}", msg);
-        // }
-
-		
 	}
 
-	
 }
-
 
 pub struct NodeImporter
 {
@@ -156,7 +123,6 @@ impl NodeImporter
 		}
 
 
-		println!("TypeMap: {:#?}", &self.type_map);
 		Ok(true)
 	}
 
@@ -180,10 +146,7 @@ impl NodeImporter
     	    	let msg = trans.create_vertex(&v);
     	    }
         }
-
-
 		let msg = trans.get_vertex_count();
-        println!("{:?}", msg);
 	}
 
 }

@@ -43,7 +43,7 @@ fn main()
 {
     // TODO: Add console argument to be used as address
 	println!("running server...");
-	let addr: SocketAddr = "127.0.0.1:54321".parse().unwrap();
+	let addr: SocketAddr = "127.0.0.1:6000".parse().unwrap();
     // Create a tokio event loop.
     let mut core = Core::new().unwrap();
     let handle = core.handle();

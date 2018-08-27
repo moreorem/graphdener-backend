@@ -19,17 +19,13 @@ impl Service for Echo
         match method 
         {
             "import" => Commands::import_paths(params[0].as_array().expect("expected array")),
-            "update" => Commands::update(params[0].as_str().expect("expected str"),
-                                        params[1].as_array().expect("expected array")),
-            // "c_vert" => Commands::create_vertex(params[0].as_str().expect("expected str")),
             "get" => Commands::get_object(params[0].as_str().expect("expected edge or vert keyword"), 
                                           params[1].as_str().expect("expected one of the attributes") ),
-            // "get_vert" => Commands::get_vertex(params[0].as_array().expect("expected array"), params[1].as_str().expect("expected str")),
             _ => Err("invalid argument".into())
         }
         
     }
-  
+    // TODO: Create a struct of response that always contains ids along with each info and return this to the frontend
     // Define how the server handle notifications.
     //
     // This server just prints the method in the console.

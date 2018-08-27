@@ -4,7 +4,7 @@ use rmp_rpc::Value;
 use rand::prelude::*;
 
 use io::filehandling;
-use graphdener::{Datastore, Transaction, Type, EdgeKey, VertexQuery, Vertex, util::generate_uuid_v1};
+use graphdener::{Datastore, Transaction, Type, EdgeKey, VertexQuery, Vertex};
 // use datastore::ProxyDatastore;
 use statics;
 use std::iter::Iterator;
@@ -24,6 +24,7 @@ pub trait Info<Unit>{
         Value::Array(vec!(Value::from(1)))
     }
 }    
+
 
 
 // Here declare the functions that are going to be executed on the server
@@ -60,10 +61,20 @@ impl Commands
 
     // TODO: Make Getter trait for every object
   
-    // Returns specific info about a set or all of the vertices that exist in the database to the frontend
-    pub fn get_vertex(v_id: &[Value], info_type: &str) -> Result<Value, Value>
+    // general getter that leads to specific objects
+    pub fn get_object(obj: &str, info: &str) -> Result<Value, Value>
     {
-        println!("{:?}", v_id);
+        let r = match obj {
+            "edge" => Commands::get_edge(&[], info).unwrap(), //Value::Boolean(Commands::get_edge().unwrap()),
+            "vert" => Commands::get_vertex(&[], info).unwrap(), //Commands::get_vertex(&vec!(Value::from(2)), "pos"),
+            _ => Value::from("Error")
+        };
+        Ok(r)
+    }
+
+    // Returns specific info about a set or all of the vertices that exist in the database to the frontend
+    fn get_vertex(v_id: &[Value], info_type: &str) -> Result<Value, Value>
+    {
         let trans = statics::DATASTORE.transaction().unwrap();
         let v: VertexQuery;
         let mut v_id_list: Vec<Uuid> = Vec::new();
@@ -73,7 +84,6 @@ impl Commands
             v_id_list.push(<Uuid>::parse_str(item.as_str().unwrap()).unwrap());
         }
 
-        println!("{:#?}", v_id_list);
         // FIXME: Simplify vertex query, remove some conditionals
         if v_id.len() > 0
         {
@@ -87,10 +97,9 @@ impl Commands
         }
         // In this case the msg variable is of type model::Vertex. It has to be broken into the struct items to be used
         let draft_info = trans.get_vertices(&v).unwrap();
-
+        println!("asked about {}", &info_type);
         Ok(Commands::vert_info(info_type, draft_info))
     }
-
 
     fn vert_info(info_type: &str, draft_model: Vec<Vertex>) -> Value
     {
@@ -101,37 +110,23 @@ impl Commands
         match info_type
         {
             "type" => Value::Array( r_iter.map( |x| Value::from(x.t.0.to_owned()) ).collect() ),
-            "pos" => Value::Array(Commands::get_attribute("pos")),
-            "size" => Value::Array(Commands::get_attribute("size")),
-            "color" => Value::Array(Commands::get_attribute("color")),
-            "label" => Value::Array(Commands::get_attribute("label")),
-            _ => Value::from("error")
+            "pos" => Value::Array(Commands::get_v_attribute("pos")),
+            "size" => Value::Array(Commands::get_v_attribute("size")),
+            "color" => Value::Array(Commands::get_v_attribute("color")),
+            "label" => Value::Array(Commands::get_v_attribute("label")),
+            _ => Value::from(format!("No such info: {}", info_type ))
 
         }
     }
-
-
-    // general getter that leads to specific objects
-    pub fn get_object(obj: &str, info: &str) -> Result<Value, Value>
-    {
-        let r = match obj {
-            "edge" => Commands::get_edge(&[], info).unwrap(), //Value::Boolean(Commands::get_edge().unwrap()),
-            "vert" => Commands::get_vertex(&[], info).unwrap(), //Commands::get_vertex(&vec!(Value::from(2)), "pos"),
-            _ => Value::from("Error")
-        };
-        Ok(r)
-    }
-
 
     // make a getter only for edge types, weight, direction and fromto
     fn get_edge(v_id: &[Value], info_type: &str) -> Result<Value, Value>
     {
         let trans = statics::DATASTORE.transaction().unwrap();
         let edge_list_available: bool;
-        let draft_info = trans.get_edges(&VertexQuery::All{start_id: None, limit: 100000000}
-                                        .outbound_edges(None, None, None, None, 1000000000) )
+        let draft_info = trans.get_edges(&VertexQuery::All{start_id: None, limit: 1000000}
+                                        .outbound_edges(None, None, None, None, 1000000) )
                                         .unwrap();
-        println!("{:?}", draft_info);
         Ok(Commands::edge_info(info_type, draft_info))
     }
  
@@ -144,19 +139,21 @@ impl Commands
         match info_type
         {
             "type" => Value::Array( r_iter.map( |x| Value::from(x.key.t.0.to_owned() ) ).collect() ),
-            "pos" => Value::Array(Commands::get_attribute("pos")),
-            "label" => Value::Array(Commands::get_attribute("label")),
+            "pos" => Value::Array(Commands::get_adj_list() ),
+            "label" => Value::Array(Commands::get_e_attribute("label")),
+            "weight" => Value::Array(Commands::get_e_attribute("weight")),
             _ => Value::from("error")
         }
     }
-    
+
     // Returns one of the attributes that reside in the metadata map of each vertex
-    fn get_attribute(kind: &str) -> Vec<Value>
+    fn get_v_attribute(kind: &str) -> Vec<Value>
     {
         Commands::set_random_pos(); // TESTME: Delete afterwards
         
         let trans = statics::DATASTORE.transaction().unwrap();
         let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
+
         let t = match kind
         {
             "pos" => trans.get_vertex_metadata(&v, "pos").unwrap(),
@@ -166,21 +163,27 @@ impl Commands
             _ => vec!()
         };
 
+   
         t.iter().map(|x| Value::from(x.value.to_string())).collect() // TODO: Find a way to return a float instead of string
 
     }
 
-    pub fn update(field: &str, values: &[Value]) -> Result<Value, Value>
+    fn get_e_attribute(kind: &str) -> Vec<Value>
     {
-        match field {
-            "pos" => Commands::set_random_pos(),
-            _ => panic!("unknown attribute")
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let e = &VertexQuery::All{start_id: None, limit: 100000000}
+                            .outbound_edges(None, None, None, None, 1000000000);
+        let t = match kind
+        {
+            "weight" => trans.get_edge_metadata(&e, "weight").unwrap(),
+            "label" => trans.get_edge_metadata(&e, "label").unwrap(),
+            _ => vec!()
+        };
 
-        }
-
-        Ok(Value::from("ok"))
+        t.iter().map(|x| Value::from(x.value.to_string())).collect() // TODO: Find a way to return a float instead of string        
     }
 
+    // TODO: Convert to algorithm caller later
     fn set_random_pos()
     {
         let mut rng = thread_rng();
@@ -189,7 +192,7 @@ impl Commands
         let mut x: f64;
         let mut y: f64;
 
-        for vert in trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 10000000 }).unwrap().iter()
+        for vert in trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter()
         {
             x = rng.gen();
             y = rng.gen();
@@ -197,10 +200,40 @@ impl Commands
             trans.set_vertex_metadata(&v, "pos", &json!([x, y]));
             // trans.get_vertex_metadata(&v, "pos").unwrap();
             // TESTME: use random values for position in order to print the nodes on the canvas
-           
         }
     }
 
+    fn get_adj_list() -> Vec<Value>
+    {
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let mut idx_map: HashMap<Uuid, usize> = HashMap::new();
+        let i = 0;
+        let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
+        let t = trans.get_vertex_metadata(&v, "pos").unwrap(); // FIXME: Prefer to use just uuid query
+
+        // Create index map in order to create the adjacency list next
+        for (i, x) in t.iter().enumerate()
+        {
+            idx_map.insert(x.id, i);
+        }
+        println!("{:?}", idx_map);
+        let draft_edges = trans.get_edges(&VertexQuery::All{start_id: None, limit: 1000000}
+                .outbound_edges(None, None, None, None, 1000000)).unwrap();
+        
+        draft_edges.iter().map(|x| Value::Array([
+                                    Value::from(*idx_map.get(&x.key.outbound_id).unwrap()), 
+                                    Value::from(*idx_map.get(&x.key.inbound_id).unwrap())
+                                    ].to_vec())) 
+                                    .collect()
+    }
     
 }
-
+#[cfg(test)]
+mod tests {
+    use commands::Commands;
+    #[test]
+    fn test_pos()
+    {  
+        // println!("{:?}", Commands::get_adj_list(IDX_MAP))
+    }
+}
