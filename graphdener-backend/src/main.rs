@@ -25,19 +25,13 @@ mod server;
 mod statics;
 mod io;
 mod commands;
+mod alg;
 
 enum FileExtension
 {
 	Txt,
 	Csv
 }
-
-enum ColumnSeparator
-{
-	Comma,
-	Whitespace
-}
-
 
 fn main() 
 {

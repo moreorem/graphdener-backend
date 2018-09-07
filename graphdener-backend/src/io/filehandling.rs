@@ -1,6 +1,6 @@
 use uuid::Uuid;
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Result, Error};
+use std::io::{BufRead, BufReader, Error};
 use std::{fs::File, io};
 use regex::Regex;
 use io::importer::{initialize_spatial, EdgeImporter, NodeImporter};
@@ -13,9 +13,9 @@ use statics;
 // TODO: Add file format error handling
 // TODO: If there is only one file, then generate ids from edge relations
 
-pub fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Result<bool>
+fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Result<bool>
 {
-	let file = File::open(path)?;
+	let file = File::open(path).expect("There was a problem reading the vertices file.");
 	// TODO: Make regular expression customizable according to frontend input
 	let re = Regex::new(r#"^(?P<id>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)""#).unwrap();
 	// Create temporary collection to handle import
@@ -24,9 +24,18 @@ pub fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Res
 
 	for line in BufReader::new(file).lines()
 	{
-		let line_string = &String::from(line.unwrap());
-		let caps = re.captures(line_string).unwrap();  // FIXME: Backend panics when unwrapping empty value
-	
+		let line_text = line.unwrap();
+		let line_string = &String::from(line_text);
+		let caps;
+
+		// Handle lines that are empty or do not fit in the expression
+		if let Some(x) = re.captures(line_string) {
+			caps = re.captures(line_string).unwrap();	
+		}
+		else {
+			continue;
+		}
+
 		// Distinguish id columns and store them separately
 		let id_label_type: (u32, &str, &str) = (caps["id"].parse::<u32>().expect("expected digit"),	
 												&caps["label"], 
@@ -35,7 +44,6 @@ pub fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Res
 		
 	}
 	
-	// FIXME: restore result to single and save uuid_map into struct outside of this file
 	*uuid_map = relation_table.generate_id_map().unwrap();
 	
 	relation_table.generate_type_map();
@@ -46,9 +54,9 @@ pub fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Res
 	Ok(true)
 }
 
-pub fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<bool>
+fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<bool>
 {
-	let file = File::open(path)?;
+	let file = File::open(path).expect("There was a problem reading the edges file.");
 	let from_to: (u32, u32);
 	let t = 0;
 	// Regular expression pattern for edge list
@@ -63,8 +71,17 @@ pub fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<boo
 
 	for line in BufReader::new(file).lines()
 	{
-		let line_string = &String::from(line.unwrap());
-		let caps = re.captures(line_string).unwrap(); // FIXME: Backend panics when unwrapping empty value
+		let line_text = line.unwrap();
+		let line_string = &String::from(line_text);
+		let caps;
+
+		// Handle lines that are empty or do not fit in the expression
+		if let Some(x) = re.captures(line_string) {
+			caps = re.captures(line_string).unwrap();	
+		}
+		else {
+			continue;
+		}
 
 		// Distinguish id columns and store them separately
 		let from_to: (u32, u32, u32, &str, &str, u8) = (caps["id"].parse::<u32>().expect("expected digit"),
@@ -73,12 +90,25 @@ pub fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<boo
 														&caps["label"], &caps["type"],
 														caps["weight"].parse::<u8>().expect("expected digit"));
 		relation_table.update(from_to);
-		
-		// for loop to use on another thread
 	}
-	// Generate a hashmap to translate imported ids to uuids
-	// relation_table.generate_id_map();
 	// Create number of vertices as many as the variety of uuids
 	relation_table.create_edges(&uuid_map);
 	Ok(true)
+}
+
+pub fn import_files(vert_path: &str, edge_path: &str) -> Result<(), &'static str>
+{
+	let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
+	let e: bool;
+	let v: bool;
+
+	// Handle the possibility of not setting a node filepath
+    v = import_vertices(vert_path, &mut uuid_map).unwrap();
+    e = import_edges(edge_path, &uuid_map).unwrap();
+    if e && v {
+    	Ok(())
+    }
+    else {
+    	Err("There was an error with one or both of the files")
+    }
 }

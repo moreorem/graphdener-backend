@@ -19,11 +19,16 @@ impl Service for Echo
         match method 
         {
             "import" => Commands::import_paths(params[0].as_array().expect("expected array")),
-            "get" => Commands::get_object(params[0].as_str().expect("expected edge or vert keyword"), 
-                                          params[1].as_str().expect("expected one of the attributes") ),
-            _ => Err("invalid argument".into())
+            "get" => {
+                let canvas_id: u8 = params[2].as_u64().expect("invalid canvas id") as u8;
+                match params[0].as_str().expect("expected str") {
+                    "edge" => Commands::get_edge(canvas_id, params[1].as_str().unwrap()), 
+                    "vert" => Commands::get_vertex(canvas_id, params[1].as_str().unwrap()),
+                    _ => Err("Could not get such object".into())
+                }
+            },
+            _ => Err("Invalid method call".into())
         }
-        
     }
     // TODO: Create a struct of response that always contains ids along with each info and return this to the frontend
     // Define how the server handle notifications.

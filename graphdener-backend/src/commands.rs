@@ -3,13 +3,15 @@ use std::collections::HashMap;
 use rmp_rpc::Value;
 use rand::prelude::*;
 
+use alg::barycenterordering as bary;
+use alg::circular as cir;
+
 use io::filehandling;
-use graphdener::{Datastore, Transaction, Type, EdgeKey, VertexQuery, Vertex};
-// use datastore::ProxyDatastore;
+use graphdener::{Datastore, Transaction, EdgeKey, VertexQuery, Vertex};
 use statics;
 use std::iter::Iterator;
 use uuid::Uuid;
-
+// use std::num::{sqrt, pow};
 
 enum Unit<Info>
 {
@@ -24,9 +26,7 @@ pub trait Info<Unit>{
         Value::Array(vec!(Value::from(1)))
     }
 }    
-
-
-
+    
 // Here declare the functions that are going to be executed on the server
 pub struct Commands;
 
@@ -41,60 +41,21 @@ impl Commands
         let node_list_path = path[0].as_str();
         let edge_list_path = path[1].as_str();
        
-        // Count number of paths to import
-        let paths_number = path.iter().count();
-        
-        let msg = format!("{}{}{}", "Imported ", paths_number, " paths");
+        filehandling::import_files(node_list_path.unwrap(), edge_list_path.unwrap());
 
-        let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
-        // Parse file to filehandling function
-
-        // Handle the possibility of not setting a node filepath
-        if let Some(node_list_path) = node_list_path {
-            filehandling::import_vertices(node_list_path, &mut uuid_map);
-        }
-        if let Some(edge_list_path) = edge_list_path {
-            filehandling::import_edges(edge_list_path, &uuid_map);
-        }
-        Ok(Value::from(msg))
+        Ok(Value::from("paths imported"))
     }
 
-    // TODO: Make Getter trait for every object
-  
-    // general getter that leads to specific objects
-    pub fn get_object(obj: &str, info: &str) -> Result<Value, Value>
-    {
-        let r = match obj {
-            "edge" => Commands::get_edge(&[], info).unwrap(), //Value::Boolean(Commands::get_edge().unwrap()),
-            "vert" => Commands::get_vertex(&[], info).unwrap(), //Commands::get_vertex(&vec!(Value::from(2)), "pos"),
-            _ => Value::from("Error")
-        };
-        Ok(r)
-    }
 
     // Returns specific info about a set or all of the vertices that exist in the database to the frontend
-    fn get_vertex(v_id: &[Value], info_type: &str) -> Result<Value, Value>
+    pub fn get_vertex(canvas_id: u8, info_type: &str) -> Result<Value, Value>
     {
         let trans = statics::DATASTORE.transaction().unwrap();
         let v: VertexQuery;
-        let mut v_id_list: Vec<Uuid> = Vec::new();
 
-        for item in v_id.iter()
-        {
-            v_id_list.push(<Uuid>::parse_str(item.as_str().unwrap()).unwrap());
-        }
-
-        // FIXME: Simplify vertex query, remove some conditionals
-        if v_id.len() > 0
-        {
-            v = VertexQuery::Vertices{ ids: v_id_list };
-            println!("some uuids");
-        }
-        else
-        {
-            v = VertexQuery::All{ start_id: None, limit: 1000000000 };
-            println!("all vertices");
-        }
+        v = VertexQuery::All{ start_id: None, limit: 1000000000 };
+        println!("all vertices");
+    
         // In this case the msg variable is of type model::Vertex. It has to be broken into the struct items to be used
         let draft_info = trans.get_vertices(&v).unwrap();
         println!("asked about {}", &info_type);
@@ -120,10 +81,11 @@ impl Commands
     }
 
     // make a getter only for edge types, weight, direction and fromto
-    fn get_edge(v_id: &[Value], info_type: &str) -> Result<Value, Value>
+    pub fn get_edge(canvas_id: u8, info_type: &str) -> Result<Value, Value>
     {
         let trans = statics::DATASTORE.transaction().unwrap();
         let edge_list_available: bool;
+
         let draft_info = trans.get_edges(&VertexQuery::All{start_id: None, limit: 1000000}
                                         .outbound_edges(None, None, None, None, 1000000) )
                                         .unwrap();
@@ -162,10 +124,8 @@ impl Commands
             "label" => trans.get_vertex_metadata(&v, "label").unwrap(),
             _ => vec!()
         };
-
    
         t.iter().map(|x| Value::from(x.value.to_string())).collect() // TODO: Find a way to return a float instead of string
-
     }
 
     fn get_e_attribute(kind: &str) -> Vec<Value>
@@ -192,14 +152,20 @@ impl Commands
         let mut x: f64;
         let mut y: f64;
 
+        let node_list = trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap();
+
+        let vert_num = node_list.len() as u32;
+
+        let mut positions = cir::polygon(vert_num).into_iter();
+
         for vert in trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter()
         {
-            x = rng.gen();
-            y = rng.gen();
+            // x = rng.gen();
+            // y = rng.gen();
+            let (x,y) = positions.next().unwrap();
             let v = VertexQuery::Vertices{ ids: vec!(vert.id) };
             trans.set_vertex_metadata(&v, "pos", &json!([x, y]));
             // trans.get_vertex_metadata(&v, "pos").unwrap();
-            // TESTME: use random values for position in order to print the nodes on the canvas
         }
     }
 
@@ -228,12 +194,37 @@ impl Commands
     }
     
 }
+
+fn create_arrowhead(A: [f64;2], B: [f64;2], v1: &mut [f64;2], v2: &mut [f64;2]) -> ()
+{
+    let w = 1.;
+    let h: f64 = w * (0.8660254037844386467637); // sqrt(3)/2
+    let mut U: [f64;2]; 
+    let mag = ((B[0] - A[0]).powf(2.0) + (B[1] - A[1]).powf(2.0)).sqrt();
+
+    let u0 = (B[0] - A[0])/(mag);
+    let u1 = (B[1] - A[1])/(mag);
+    U = [u0, u1];
+    let V: [f64;2] = [-U[1], U[0]];
+    *v1 = [B[0] - h*U[0] + w*V[0], B[1] - h*U[1] + w*V[1]];
+    *v2 = [B[0] - h*U[0] - w*V[0], B[1] - h*U[1] - w*V[1]];
+}
+
+
+
+
 #[cfg(test)]
 mod tests {
-    use commands::Commands;
+use commands::create_arrowhead;
+use commands::Commands;
     #[test]
-    fn test_pos()
+    fn test_arrow()
     {  
+        let mut v1: [f64;2] = [-2.0, 3.0];
+        let mut v2: [f64;2] = [-2.0, 3.0];
+        create_arrowhead([1.0,1.0],[-2.0,3.0], &mut v1, &mut v2);
+        println!("{:?}//{:?}",v1, v2);
+        panic!("{:?}//{:?}",v1, v2);
         // println!("{:?}", Commands::get_adj_list(IDX_MAP))
     }
 }

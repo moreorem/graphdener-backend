@@ -2,4 +2,5 @@
 // on the canvas.
 
 pub mod forcedirected;
-mod relational;
+pub mod barycenterordering;
+pub mod circular;
