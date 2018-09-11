@@ -49,6 +49,7 @@ impl EdgeImporter
 
 }
 
+#[derive(Debug)]
 pub struct NodeImporter
 {
 	node_list: Vec<(u32, String, String)>,
@@ -63,7 +64,7 @@ impl NodeImporter
 		NodeImporter {	node_list: Vec::new(),
 						type_map: HashMap::new(),
 						uuid_map: HashMap::new()
-					}
+					 }
 	}
 
 	pub fn update(&mut self, id_label_type: (u32, &str, &str) )

@@ -1,8 +1,8 @@
 use uuid::Uuid;
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Error};
+use std::io::{BufRead, BufReader, Error, ErrorKind};
 use std::{fs::File, io};
-use regex::Regex;
+use regex::{Regex, Captures};
 use io::importer::{initialize_spatial, EdgeImporter, NodeImporter};
 use statics;
 
@@ -12,6 +12,36 @@ use statics;
 // TODO: If necessary do calculations for analysis about graph from here
 // TODO: Add file format error handling
 // TODO: If there is only one file, then generate ids from edge relations
+
+// PENDING: Use it!
+enum LineType<'a> {
+	NodeLine(u32, &'a str, &'a str),
+	EdgeLine(u32, u32, u32, &'a str, &'a str, u8),
+}
+
+enum Importer {
+	NodeImporter,
+	EdgeImporter
+}
+
+
+fn process_n_line(line: String, caps: &Captures, relation_table: &mut NodeImporter ) -> ()
+{
+	let id_label_type: (u32, &str, &str) = (caps["id"].parse::<u32>().expect("expected digit"),	
+										&caps["label"], 
+										&caps["type"]);
+	relation_table.update(id_label_type);
+}
+
+fn process_e_line(line: String, caps: &Captures, relation_table: &mut EdgeImporter ) -> ()
+{
+	let from_to: (u32, u32, u32, &str, &str, u8) = (caps["id"].parse::<u32>().expect("expected digit"),
+														caps["source"].parse::<u32>().expect("expected digit"),
+														caps["target"].parse::<u32>().expect("expected digit"),
+														&caps["label"], &caps["type"],
+														caps["weight"].parse::<u8>().expect("expected digit"));
+	relation_table.update(from_to);
+}
 
 fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Result<bool>
 {
@@ -25,23 +55,19 @@ fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Result<
 	for line in BufReader::new(file).lines()
 	{
 		let line_text = line.unwrap();
-		let line_string = &String::from(line_text);
-		let caps;
-
+		let line_string = String::from(line_text);
+		let caps: Captures;
+		let id_label_type: (u32, &str, &str);
+		
 		// Handle lines that are empty or do not fit in the expression
-		if let Some(x) = re.captures(line_string) {
-			caps = re.captures(line_string).unwrap();	
+		if let Some(x) = re.captures(&line_string) {
+			caps = re.captures(&line_string).unwrap();
+			// Parse the line into the relation table
+			process_n_line(line_string.to_owned(), &caps, &mut relation_table);
 		}
 		else {
 			continue;
 		}
-
-		// Distinguish id columns and store them separately
-		let id_label_type: (u32, &str, &str) = (caps["id"].parse::<u32>().expect("expected digit"),	
-												&caps["label"], 
-												&caps["type"]);
-		relation_table.update(id_label_type);
-		
 	}
 	
 	*uuid_map = relation_table.generate_id_map().unwrap();
@@ -78,18 +104,12 @@ fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<bool>
 		// Handle lines that are empty or do not fit in the expression
 		if let Some(x) = re.captures(line_string) {
 			caps = re.captures(line_string).unwrap();	
+			process_e_line(line_string.to_owned(), &caps, &mut relation_table);
+
 		}
 		else {
 			continue;
 		}
-
-		// Distinguish id columns and store them separately
-		let from_to: (u32, u32, u32, &str, &str, u8) = (caps["id"].parse::<u32>().expect("expected digit"),
-														caps["source"].parse::<u32>().expect("expected digit"),
-														caps["target"].parse::<u32>().expect("expected digit"),
-														&caps["label"], &caps["type"],
-														caps["weight"].parse::<u8>().expect("expected digit"));
-		relation_table.update(from_to);
 	}
 	// Create number of vertices as many as the variety of uuids
 	relation_table.create_edges(&uuid_map);
