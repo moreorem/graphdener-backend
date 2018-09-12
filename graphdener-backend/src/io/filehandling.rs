@@ -43,11 +43,11 @@ fn process_e_line(line: String, caps: &Captures, relation_table: &mut EdgeImport
 	relation_table.update(from_to);
 }
 
-fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Result<bool>
+fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>, format: &str) -> io::Result<bool>
 {
 	let file = File::open(path).expect("There was a problem reading the vertices file.");
 	// TODO: Make regular expression customizable according to frontend input
-	let re = Regex::new(r#"^(?P<id>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)""#).unwrap();
+	let re = Regex::new(format).unwrap();
 	// Create temporary collection to handle import
 	let mut relation_table = NodeImporter::new();
 	println!("Parsing file {}", path);
@@ -80,7 +80,7 @@ fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>) -> io::Result<
 	Ok(true)
 }
 
-fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<bool>
+fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::Result<bool>
 {
 	let file = File::open(path).expect("There was a problem reading the edges file.");
 	let from_to: (u32, u32);
@@ -89,7 +89,7 @@ fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<bool>
 	// TODO: Make regular expression customizable according to frontend input
 	// let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
 
-	let re = Regex::new(r#"^(?P<id>\d+)\s+(?P<source>\d+)\s+(?P<target>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)"\s+(?P<weight>\d+)"#).unwrap();	
+	let re = Regex::new(format).unwrap();	
 	// Create temporary collection to handle import
 	let mut relation_table = EdgeImporter::new();
 
@@ -105,7 +105,6 @@ fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<bool>
 		if let Some(x) = re.captures(line_string) {
 			caps = re.captures(line_string).unwrap();	
 			process_e_line(line_string.to_owned(), &caps, &mut relation_table);
-
 		}
 		else {
 			continue;
@@ -116,15 +115,15 @@ fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>) -> io::Result<bool>
 	Ok(true)
 }
 
-pub fn import_files(vert_path: &str, edge_path: &str) -> Result<(), &'static str>
+pub fn import_files(vert_path: &str, edge_path: &str, format: &[&str; 2]) -> Result<(), &'static str>
 {
 	let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
 	let e: bool;
 	let v: bool;
 
 	// Handle the possibility of not setting a node filepath
-    v = import_vertices(vert_path, &mut uuid_map).unwrap();
-    e = import_edges(edge_path, &uuid_map).unwrap();
+    v = import_vertices(vert_path, &mut uuid_map, format[0]).unwrap();
+    e = import_edges(edge_path, &uuid_map, format[1]).unwrap();
     if e && v {
     	Ok(())
     }

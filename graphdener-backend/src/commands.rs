@@ -41,7 +41,10 @@ impl Commands
         let node_list_path = path[0].as_str();
         let edge_list_path = path[1].as_str();
        
-        filehandling::import_files(node_list_path.unwrap(), edge_list_path.unwrap());
+        // PENDING: receive the format from the frontend
+        let format = [ r#"^(?P<id>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)""#,
+                       r#"^(?P<id>\d+)\s+(?P<source>\d+)\s+(?P<target>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)"\s+(?P<weight>\d+)"#];
+        filehandling::import_files(node_list_path.unwrap(), edge_list_path.unwrap(), &format);
 
         Ok(Value::from("paths imported"))
     }

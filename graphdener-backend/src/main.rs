@@ -27,12 +27,6 @@ mod io;
 mod commands;
 mod alg;
 
-enum FileExtension
-{
-	Txt,
-	Csv
-}
-
 fn main() 
 {
     // TODO: Add console argument to be used as address

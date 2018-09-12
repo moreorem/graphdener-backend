@@ -49,7 +49,6 @@ impl EdgeImporter
 
 }
 
-#[derive(Debug)]
 pub struct NodeImporter
 {
 	node_list: Vec<(u32, String, String)>,
@@ -98,7 +97,6 @@ impl NodeImporter
 		Ok(uuid_map)
 	}
 
-
 	pub fn generate_type_map(&mut self) -> Result<bool, bool>
 	{
 		// Create a hashmap with type as key and vector of uuids as the values that belong to that type
@@ -122,8 +120,6 @@ impl NodeImporter
 
 			&self.type_map.insert(t, last_entry);
 		}
-
-
 		Ok(true)
 	}
 
