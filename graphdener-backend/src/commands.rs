@@ -46,12 +46,13 @@ impl Commands
         let mut edge_pattern: String = String::from("");
         node_pattern.push_str(&format!(r#"{}"#, patternN));
         edge_pattern.push_str(&format!(r#"{}"#, patternE));
-        println!("{}", edge_pattern);
         // r#"^(?P<id>\d+)\s+(?P<source>\d+)\s+(?P<target>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)"\s+(?P<weight>\d+)"#
         // PENDING: receive the format from the frontend
         let format = [ &node_pattern[..], &edge_pattern[..] ];
-        filehandling::import_files(node_list_path.unwrap(), edge_list_path.unwrap(), &format);
 
+        filehandling::import_files(node_list_path.unwrap(), edge_list_path.unwrap(), &format);
+        println!("shtittt");
+        
         Ok(Value::from("paths imported"))
     }
 

@@ -36,8 +36,8 @@ fn process_n_line(line: String, caps: &Captures, relation_table: &mut NodeImport
 fn process_e_line(line: String, caps: &Captures, relation_table: &mut EdgeImporter ) -> ()
 {
 	let from_to: (u32, u32, u32, &str, &str, u8) = (caps["id"].parse::<u32>().expect("expected digit"),
-														caps["source"].parse::<u32>().expect("expected digit"),
-														caps["target"].parse::<u32>().expect("expected digit"),
+														caps["from"].parse::<u32>().expect("expected digit"),
+														caps["to"].parse::<u32>().expect("expected digit"),
 														&caps["label"], &caps["type"],
 														caps["weight"].parse::<u8>().expect("expected digit"));
 	relation_table.update(from_to);
