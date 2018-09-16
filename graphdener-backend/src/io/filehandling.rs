@@ -33,6 +33,8 @@ fn process_n_line(line: String, caps: &Captures, relation_table: &mut NodeImport
 	relation_table.update(id_label_type);
 }
 
+// TODO: get caps keys from frontend
+
 fn process_e_line(line: String, caps: &Captures, relation_table: &mut EdgeImporter ) -> ()
 {
 	let from_to: (u32, u32, u32, &str, &str, u8) = (caps["id"].parse::<u32>().expect("expected digit"),
