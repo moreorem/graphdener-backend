@@ -34,16 +34,22 @@ impl Commands
 {
     // TODO: Implement uuid_map as a struct in models
     // Improved import function to accept an array of paths
-    pub fn import_paths(path: &Vec<Value>) -> Result<Value, Value>
+    pub fn import_paths(path: &Vec<Value>, patternN: &str, patternE: &str) -> Result<Value, Value>
     {
+
         println!("{:?}", path);
         // Define path of edgelist
         let node_list_path = path[0].as_str();
         let edge_list_path = path[1].as_str();
-       
+        // Define regular expressions
+        let mut node_pattern: String = String::from("");
+        let mut edge_pattern: String = String::from("");
+        node_pattern.push_str(&format!(r#"{}"#, patternN));
+        edge_pattern.push_str(&format!(r#"{}"#, patternE));
+        println!("{}", edge_pattern);
+        // r#"^(?P<id>\d+)\s+(?P<source>\d+)\s+(?P<target>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)"\s+(?P<weight>\d+)"#
         // PENDING: receive the format from the frontend
-        let format = [ r#"^(?P<id>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)""#,
-                       r#"^(?P<id>\d+)\s+(?P<source>\d+)\s+(?P<target>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)"\s+(?P<weight>\d+)"#];
+        let format = [ &node_pattern[..], &edge_pattern[..] ];
         filehandling::import_files(node_list_path.unwrap(), edge_list_path.unwrap(), &format);
 
         Ok(Value::from("paths imported"))

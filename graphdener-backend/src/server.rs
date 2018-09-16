@@ -18,7 +18,9 @@ impl Service for Echo
         // Call the proper command according to the input trigger from the frontend
         match method 
         {
-            "import" => Commands::import_paths(params[0].as_array().expect("expected array")),
+            "import" => Commands::import_paths(params[0].as_array().expect("expected array"), 
+                        params[1].as_str().expect("expected string"), 
+                        params[2].as_str().expect("expected string")),
             "get" => {
                 let canvas_id: u8 = params[2].as_u64().expect("invalid canvas id") as u8;
                 match params[0].as_str().expect("expected str") {

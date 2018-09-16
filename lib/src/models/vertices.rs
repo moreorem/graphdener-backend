@@ -14,6 +14,7 @@ pub struct Vertex {
     /// The type of the vertex.
     #[serde(rename = "type")]
     pub t: Type,
+
 }
 
 impl Vertex {
@@ -51,3 +52,9 @@ impl PartialEq for Vertex {
 }
 
 impl Eq for Vertex {}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct Position {
+    x: f64,
+    y: f64
+}
