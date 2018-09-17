@@ -171,7 +171,6 @@ impl Commands
             let (x,y) = positions.next().unwrap();
             let v = VertexQuery::Vertices{ ids: vec!(vert.id) };
             trans.set_vertex_metadata(&v, "pos", &json!([x, y]));
-            // trans.get_vertex_metadata(&v, "pos").unwrap();
         }
     }
 
@@ -205,17 +204,25 @@ impl Commands
 
         }
 
-        // Iterate again to create the Node structs to be used by the algorithm
-        for node in nodes.iter() // trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter()
+        // Iterate again to find neighbors for every node
+        for (uuid, id) in idx_map.iter() // trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter()
         {
             // Find neighbors
-            let surrounding_verts = trans.get_vertices(&VertexQuery::Vertices{ ids: vec!(idx_map.get(&node.id).unwrap()) }.outbound_edges(None, None, None, None, 100).inbound_vertices(100)).unwrap();
+            // PENDING: Cover case of not having any neighbors
+            let surrounding_verts = trans.get_vertices(&VertexQuery::Vertices{ ids: vec!(*uuid) }.outbound_edges(None, None, None, None, 100).inbound_vertices(100)).unwrap();
             let neighbors: Vec<usize> = surrounding_verts.iter().map(|x| *idx_map.get(&x.id).unwrap() ).collect();
-            
+            nodes[*id].neighbors = neighbors;
         }
 
         let nd = fdir::force_directed(nodes);
-        println!("{:?}", nd);
+
+        for (uuid, id) in idx_map.iter() //trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter()
+        {
+            let (x,y) = nd[*id].pos.get();
+            let v = VertexQuery::Vertices{ ids: vec!(*uuid) };
+            trans.set_vertex_metadata(&v, "pos", &json!([x, y]));
+        }
+
     }
 
     fn get_adj_list() -> Vec<Value>

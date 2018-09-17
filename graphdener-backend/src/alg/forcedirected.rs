@@ -10,7 +10,13 @@ impl Position {
 	{
 		Position {x, y}
 	}
+
+	pub fn get(&self) -> (f64, f64)
+	{
+		(self.x, self.y)
+	}
 }
+
 #[derive(Copy, Clone, Debug)]
 struct Force {
 	x: f32,
@@ -26,10 +32,10 @@ impl Force {
 
 #[derive(Clone, Debug)]
 pub struct Node {
-	id: usize,
-	pos: Position,
+	pub id: usize,
+	pub pos: Position,
 	force: Force,
-	neighbors: Option<Vec<usize>>,
+	pub neighbors: Vec<usize>,
 }
 
 impl Node
@@ -41,11 +47,11 @@ impl Node
 			id, 
 			pos: Position::new(position.0, position.1),
 			force: Force::new(0., 0.),
-			neighbors: if let x = neighbors {
+			neighbors: if let Some(x) = neighbors {
 				x
 			}
 			else {
-			    None
+			    Vec::new()
 			}
 		}
 	}
@@ -109,14 +115,14 @@ fn spring(N: usize, nodes: &mut Vec<Node>, repulsive_force: f32, spring_rest_len
 {
 	for i1 in 0..N-1
 	{
-		println!("{}", i1);
 		let mut node1 = &mut nodes[i1].clone();
-		for j in node1.neighbors.iter() //0..node1.neighbors.len() - 1
+		for i2 in node1.neighbors.iter() //0..node1.neighbors.len() - 1
 		{
 	 		//let i2 = node1.neighbors[j]; // Get position of neighbor
-	 		let mut node2 = &mut nodes[i2];
-	 		if i1 < i2 
+	 		let mut node2 = &mut nodes[*i2];
+	 		if i1 < *i2 
 	 		{
+	 			println!("{}", i2);
 	 			let dx = node2.pos.x - node1.pos.x;
 	 			let dy = node2.pos.y - node1.pos.y;
 				if dx != 0.0 || dy != 0.0
