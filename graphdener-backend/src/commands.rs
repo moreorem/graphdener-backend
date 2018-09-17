@@ -5,6 +5,7 @@ use rand::prelude::*;
 
 use alg::barycenterordering as bary;
 use alg::circular as cir;
+use alg::forcedirected as fdir;
 
 use io::filehandling;
 use graphdener::{Datastore, Transaction, EdgeKey, VertexQuery, Vertex};
@@ -47,11 +48,9 @@ impl Commands
         node_pattern.push_str(&format!(r#"{}"#, patternN));
         edge_pattern.push_str(&format!(r#"{}"#, patternE));
         // r#"^(?P<id>\d+)\s+(?P<source>\d+)\s+(?P<target>\d+)\s+"(?P<label>[^"]*)"\s+"(?P<type>[^"]*)"\s+(?P<weight>\d+)"#
-        // PENDING: receive the format from the frontend
         let format = [ &node_pattern[..], &edge_pattern[..] ];
 
         filehandling::import_files(node_list_path.unwrap(), edge_list_path.unwrap(), &format);
-        println!("shtittt");
         
         Ok(Value::from("paths imported"))
     }
@@ -121,8 +120,9 @@ impl Commands
     // Returns one of the attributes that reside in the metadata map of each vertex
     fn get_v_attribute(kind: &str) -> Vec<Value>
     {
-        Commands::set_random_pos(); // TESTME: Delete afterwards
-        
+        // Commands::set_random_pos(); // TESTME: Delete afterwards
+        Commands::use_algorithm(); // TESTME: Delete afterwards
+
         let trans = statics::DATASTORE.transaction().unwrap();
         let v = VertexQuery::All{ start_id: None, limit: 1000000000 };
 
@@ -154,29 +154,68 @@ impl Commands
     }
 
     // TODO: Convert to algorithm caller later
+    // TODO: Change name to more appropriate
     fn set_random_pos()
     {
-        let mut rng = thread_rng();
-
         let trans = statics::DATASTORE.transaction().unwrap();
         let mut x: f64;
         let mut y: f64;
 
         let node_list = trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap();
-
         let vert_num = node_list.len() as u32;
 
         let mut positions = cir::polygon(vert_num).into_iter();
 
         for vert in trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter()
         {
-            // x = rng.gen();
-            // y = rng.gen();
             let (x,y) = positions.next().unwrap();
             let v = VertexQuery::Vertices{ ids: vec!(vert.id) };
             trans.set_vertex_metadata(&v, "pos", &json!([x, y]));
             // trans.get_vertex_metadata(&v, "pos").unwrap();
         }
+    }
+
+    fn use_algorithm() -> ()
+    {
+        let mut rng = thread_rng();
+        // Translate Uuids to Ids
+
+        let trans = statics::DATASTORE.transaction().unwrap();
+        let count = trans.get_vertex_count().unwrap();
+
+        let mut idx_map: HashMap<Uuid, usize> = HashMap::with_capacity(count as usize);
+        let mut x: f64;
+        let mut y: f64;
+        let mut id: usize = 1;
+        let mut nodes: Vec<fdir::Node> = Vec::new();
+
+        // First create Uuid to Id translation map
+        for (id, vert) in trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter().enumerate()
+        {
+            idx_map.insert(vert.id, id);
+
+            // Create random positions to begin with
+            x = rng.gen();
+            y = rng.gen();
+            let v = VertexQuery::Vertices{ ids: vec!(vert.id) };
+            trans.set_vertex_metadata(&v, "pos", &json!([x, y]));
+            // Create Node struct for current node
+            let node = fdir::Node::new(id, (x,y), None);
+            nodes.push(node);
+
+        }
+
+        // Iterate again to create the Node structs to be used by the algorithm
+        for node in nodes.iter() // trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter()
+        {
+            // Find neighbors
+            let surrounding_verts = trans.get_vertices(&VertexQuery::Vertices{ ids: vec!(idx_map.get(&node.id).unwrap()) }.outbound_edges(None, None, None, None, 100).inbound_vertices(100)).unwrap();
+            let neighbors: Vec<usize> = surrounding_verts.iter().map(|x| *idx_map.get(&x.id).unwrap() ).collect();
+            
+        }
+
+        let nd = fdir::force_directed(nodes);
+        println!("{:?}", nd);
     }
 
     fn get_adj_list() -> Vec<Value>
