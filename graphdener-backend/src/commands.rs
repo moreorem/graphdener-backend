@@ -6,6 +6,7 @@ use rand::prelude::*;
 use alg::barycenterordering as bary;
 use alg::circular as cir;
 use alg::forcedirected as fdir;
+use graph::nodes::Node;
 
 use io::filehandling;
 use graphdener::{Datastore, Transaction, EdgeKey, VertexQuery, Vertex};
@@ -186,7 +187,7 @@ impl Commands
         let mut x: f64;
         let mut y: f64;
         let mut id: usize = 1;
-        let mut nodes: Vec<fdir::Node> = Vec::new();
+        let mut nodes: Vec<Node> = Vec::new();
 
         // First create Uuid to Id translation map
         for (id, vert) in trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter().enumerate()
@@ -199,11 +200,11 @@ impl Commands
             let v = VertexQuery::Vertices{ ids: vec!(vert.id) };
             trans.set_vertex_metadata(&v, "pos", &json!([x, y]));
             // Create Node struct for current node
-            let node = fdir::Node::new(id, (x,y), None);
-            nodes.push(node);
+            let node = Node::new(id, (x,y), None);
+            nodes.insert(id, node);
 
         }
-
+        
         // Iterate again to find neighbors for every node
         for (uuid, id) in idx_map.iter() // trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter()
         {
@@ -238,7 +239,6 @@ impl Commands
         {
             idx_map.insert(x.id, i);
         }
-        println!("{:?}", idx_map);
         let draft_edges = trans.get_edges(&VertexQuery::All{start_id: None, limit: 1000000}
                 .outbound_edges(None, None, None, None, 1000000)).unwrap();
         

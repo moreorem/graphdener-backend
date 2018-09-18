@@ -26,6 +26,7 @@ mod statics;
 mod io;
 mod commands;
 mod alg;
+mod graph;
 
 fn main() 
 {
