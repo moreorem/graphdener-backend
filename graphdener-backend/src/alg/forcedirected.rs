@@ -1,14 +1,14 @@
 
-use super::super::graph::nodes::Node;
+use containers::nodes::Node;
 
 const MAX_DISPLACEMENT_SQUARED: f64 = 4.0;
 
-pub fn force_directed(mut nodes: Vec<Node>) -> Vec<Node>
+pub fn force_directed(mut nodes: Vec<Node>, L: f32, K_r: f32, K_s: f32, delta_t: f32) -> Vec<Node>
 {
-	let L = 0.1; // spring rest length
-	let K_r = 2.0; // repulsive force constant
-	let K_s = 2.0; // spring constant
-	let delta_t = 2.0; // time step
+	// let L = 0.1; // spring rest length
+	// let K_r = 2.0; // repulsive force constant
+	// let K_s = 2.0; // spring constant
+	// let delta_t = 2.0; // time step
 	let N = nodes.len();
 	// initialize net forces
 	println!("initializing net forces");
@@ -24,7 +24,7 @@ pub fn force_directed(mut nodes: Vec<Node>) -> Vec<Node>
 	spring(N, &mut nodes, K_r, L);
 
 	// update positions
-	update(N, &mut nodes, delta_t);
+	update(N, &mut nodes, delta_t.into());
 	nodes
 }
 

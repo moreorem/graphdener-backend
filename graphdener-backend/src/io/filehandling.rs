@@ -6,18 +6,7 @@ use regex::{Regex, Captures};
 use io::importer::{initialize_spatial, EdgeImporter, NodeImporter};
 use statics;
 
-// TODO: Create Vertex Uuids and edges concurrently
-// TODO: Create instantly that many UUIDs as the max of vertex indices
 // TODO: Receive column declarations about which part is what (ex. source,target, label, type, weight)
-// TODO: If necessary do calculations for analysis about graph from here
-// TODO: Add file format error handling
-// TODO: If there is only one file, then generate ids from edge relations
-
-// PENDING: Use it!
-enum LineType<'a> {
-	NodeLine(u32, &'a str, &'a str),
-	EdgeLine(u32, u32, u32, &'a str, &'a str, u8),
-}
 
 enum Importer {
 	NodeImporter,
@@ -48,8 +37,8 @@ fn process_e_line(line: String, caps: &Captures, relation_table: &mut EdgeImport
 fn import_vertices(path: &str, uuid_map: &mut HashMap<u32, Uuid>, format: &str) -> io::Result<bool>
 {
 	let file = File::open(path).expect("There was a problem reading the vertices file.");
-	// TODO: Make regular expression customizable according to frontend input
 	let re = Regex::new(format).unwrap();
+
 	// Create temporary collection to handle import
 	let mut relation_table = NodeImporter::new();
 	println!("Parsing file {}", path);
@@ -88,9 +77,6 @@ fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::
 	let from_to: (u32, u32);
 	let t = 0;
 	// Regular expression pattern for edge list
-	// TODO: Make regular expression customizable according to frontend input
-	// let re = Regex::new(r"(\d+)[ \t]+(\d+)").unwrap();
-
 	let re = Regex::new(format).unwrap();	
 	// Create temporary collection to handle import
 	let mut relation_table = EdgeImporter::new();

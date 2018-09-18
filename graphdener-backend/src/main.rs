@@ -21,12 +21,16 @@ use rmp_rpc::serve;
 use tokio_core::net::TcpListener;
 use tokio_core::reactor::Core;
 
+use containers::graph::GraphContainer;
+
 mod server;
 mod statics;
 mod io;
 mod commands;
+
+mod commandsold; // PENDING: Delete after migration to separate
 mod alg;
-mod graph;
+mod containers;
 
 fn main() 
 {
@@ -36,6 +40,7 @@ fn main()
     // Create a tokio event loop.
     let mut core = Core::new().unwrap();
     let handle = core.handle();
+    // let mut container = GraphContainer::default();
 
     // Create a listener to listen for incoming TCP connections.
     let server = TcpListener::bind(&addr, &handle)
@@ -43,7 +48,7 @@ fn main()
         .incoming()
         // Each time the listener finds a new connection, start up a server to handle it.
         .for_each(move |(stream, _addr)| {
-            serve(stream, Echo, handle.clone())
+            serve(stream, Echo(GraphContainer::default()), handle.clone())
         });
 
     // Run the server on the tokio event loop. This is blocking. Press ^C to stop
