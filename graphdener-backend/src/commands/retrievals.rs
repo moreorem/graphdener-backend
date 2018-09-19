@@ -1,3 +1,4 @@
+use containers::graph::GraphContainer;
 use commands::calcs::{get_adj_list};
 use rmp_rpc::Value;
 use graphdener::{Datastore, Transaction, VertexQuery, Vertex, Edge};
@@ -5,6 +6,20 @@ use statics;
 
 pub struct Retriever;
 
+// TODO: Execute this command concurrently with the algorithm update
+pub fn get_pos(graph_id: u64, container: &GraphContainer) -> Result<Value, Value>
+{
+    let id = graph_id as u8;
+    // Get positions from Graph struct with specific id
+    let graph = container.get_graph(id);
+    let positions = graph.get_positions();
+    let nodepos: Vec<Value> = positions.iter()
+    .map(|x| Value::Array( vec![Value::from(x[0]), Value::from(x[1])]) )
+    .collect();
+
+    Ok(Value::from(nodepos))
+
+}
 
 // Returns specific info about a set or all of the vertices that exist in the database to the frontend
 pub fn get_vertex(canvas_id: u8, info_type: &str) -> Result<Value, Value>

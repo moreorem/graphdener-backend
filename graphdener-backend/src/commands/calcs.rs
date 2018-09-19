@@ -70,13 +70,21 @@ pub fn find_neighbors(trans: MemoryTransaction, nodes: &mut Vec<Node>, idx_map: 
         // Find neighbors for current node
         if let Ok(x) = trans.get_vertices(&VertexQuery::Vertices{ ids: vec!(*uuid) }.outbound_edges(None, None, None, None, 100).inbound_vertices(100))
         {
+            // Ignore absence of neighbors
+            if x.len() == 0 {
+                continue;
+            }
             surrounding_verts = x;
         }
         else {
-            return Err("no neighbors")
+            return Err("problem getting neighbors")
         }
+        // FIXME: Remove or handle surrounding_verts empty values
         let neighbors: Vec<usize> = surrounding_verts.iter().map(|x| *idx_map.get(&x.id).unwrap() ).collect();
+        println!("{:?}", neighbors);
         nodes[*id].neighbors = neighbors;
+        println!("{:?}", nodes);
+
     }
     Ok(true)
 }

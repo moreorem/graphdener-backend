@@ -10,9 +10,9 @@ impl Position {
 		Position {x, y}
 	}
 
-	pub fn get(&self) -> (f64, f64)
+	pub fn get(&self) -> [f64; 2]
 	{
-		(self.x, self.y)
+		[self.x, self.y]
 	}
 
 	pub fn set(&mut self, x: f64, y: f64)

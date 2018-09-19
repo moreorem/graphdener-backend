@@ -41,7 +41,7 @@ fn repulsion(N: usize, nodes: &mut Vec<Node>, repulsive_force: f32 ) -> ()
  			let pos1 = node1.pos.get();
  			let pos2 = node2.pos.get();
 
- 			let (dx, dy) = (pos2.0 - pos1.0, pos2.1 - pos1.1);  //node2.pos.x - node1.pos.x;
+ 			let (dx, dy) = (pos2[0] - pos1[0], pos2[1] - pos1[1]);  //node2.pos.x - node1.pos.x;
  			if dx != 0.0 || dy != 0.0
  			{
 				let distanceSquared = dx*dx + dy*dy;
@@ -73,7 +73,7 @@ fn spring(N: usize, nodes: &mut Vec<Node>, repulsive_force: f32, spring_rest_len
 	 			let pos1 = node1.pos.get();
  				let pos2 = node2.pos.get();
 
- 				let (dx, dy) = (pos2.0 - pos1.0, pos2.1 - pos1.1);
+ 				let (dx, dy) = (pos2[0] - pos1[0], pos2[1] - pos1[1]);
 
 				if dx != 0.0 || dy != 0.0
 				{
@@ -116,8 +116,11 @@ fn update(N: usize, nodes: &mut Vec<Node>, delta_t: f64) -> ()
 	 	}
 
 	 	let pos = node.pos.get();
-	 	node.pos.set(pos.0 + dx, pos.1 + dy);
+	 	node.pos.set(pos[0] + dx, pos[1] + dy);
 	 // 	node.pos.x = node.pos.x + dx;
 		// node.pos.y = node.pos.y + dy;
 	}
 }
+
+
+// trait Aglorithm(&self) -> Vec<node>;

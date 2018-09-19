@@ -33,8 +33,7 @@ pub fn initialize_graph(id: u64, container: &mut GraphContainer) -> Result<Value
 pub fn populate_graph(id: u64, container: &mut GraphContainer) -> Result<Value, Value>
 {
     let id: u8 = id as u8;
-    container.get_graph(id).populate();
-    println!("{:?}", container.0.get(&id));
-    panic!("HEHAHSHAHH");
+    container.get_mut_graph(id).populate();
+    println!("{:?}", container.0.get(&id)); // TESTME: are nodes full?
     Ok(Value::from(id))
 }
