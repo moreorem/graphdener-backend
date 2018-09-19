@@ -1,7 +1,7 @@
 use rmp_rpc::{Service, Value};
 // use commandsold::Commands;
 use containers::graph::GraphContainer;
-use commands::initials::{import_paths, initialize_graph};
+use commands::initials::{import_paths, initialize_graph, populate_graph};
 use commands::retrievals::{get_edge, get_vertex};
 
 // Our server type
@@ -18,14 +18,16 @@ impl Service for Echo
     // Define how the server handle requests.
     fn handle_request(&mut self, method: &str, params: &[Value]) -> Self::RequestFuture 
     {
-
         // Call the proper command according to the input trigger from the frontend
         match method 
         {
             "import" => import_paths(params[0].as_array().expect("expected array"), 
                         params[1].as_str().expect("expected string"), 
                         params[2].as_str().expect("expected string")),
-            "graph" => initialize_graph(params[0].as_u64().expect("expected id"), &mut self.0),
+            "newgraph" => initialize_graph(params[0].as_u64().expect("expected id"), &mut self.0), 
+            "populate" => populate_graph(params[0].as_u64().expect("expected id"), &mut self.0),
+            //"direct" => force_directed(),
+            // "refresh" => to be called on every timer tic
             "get" => {
                 let canvas_id: u8 = params[2].as_u64().expect("invalid canvas id") as u8;
                 match params[0].as_str().expect("expected str") {
@@ -42,7 +44,7 @@ impl Service for Echo
     //
     // This server just prints the method in the console.
     fn handle_notification(&mut self, method: &str, _: &[Value]) {
-        println!("{}", method);
+        println!("Rust Backend: {}", method);
     }
 }
 

@@ -1,4 +1,4 @@
-use commands::calcs::{get_adj_list, use_algorithm};
+use commands::calcs::{get_adj_list};
 use rmp_rpc::Value;
 use graphdener::{Datastore, Transaction, VertexQuery, Vertex, Edge};
 use statics;
@@ -71,7 +71,7 @@ fn edge_info(info_type: &str, draft_model: Vec<Edge>) -> Value
 fn get_v_attribute(kind: &str) -> Vec<Value>
 {
     // set_random_pos(); // TESTME: Delete afterwards
-    use_algorithm(); // TESTME: Delete afterwards
+    //use_algorithm(); // TESTME: Delete afterwards
 
     let trans = statics::DATASTORE.transaction().unwrap();
     let v = VertexQuery::All{ start_id: None, limit: 1000000000 };

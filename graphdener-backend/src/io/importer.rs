@@ -4,6 +4,9 @@ use graphdener::util;
 use graphdener::{Datastore, Transaction, Type, EdgeKey, EdgeQuery, Vertex, VertexQuery, EdgeDirection};
 use statics;
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
+
+// TODO: Simplify importers. Only write to database and use graphcontainer afterwards to create Uuid_map and edgelists
+
 pub struct EdgeImporter
 {
 	pub edge_list: Vec<(u32, u32, u32, String, String, u8)>,

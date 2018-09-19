@@ -1,8 +1,12 @@
-use std::collections::{BTreeMap, HashSet};
+use commands::calcs::{LIMIT, create_uid_map, find_neighbors};
+use uuid::Uuid;
+use std::collections::{BTreeMap, HashMap};
 use super::nodes::Node;
+use statics;
+use graphdener::{Datastore, Transaction, VertexQuery};
 
 #[derive(Clone, Debug)]
-pub struct GraphContainer(BTreeMap<u8, Graph>);
+pub struct GraphContainer(pub BTreeMap<u8, Graph>);
 
 impl GraphContainer
 {
@@ -15,23 +19,52 @@ impl GraphContainer
 
 	pub fn add_graph(&mut self, id: u8)
 	{
-		self.0.insert(id, Graph::new());
+		self.0.entry(id).or_insert(Graph::new());
+	}
+
+	pub fn get_graph(&mut self, id: u8) -> &mut Graph
+	{
+		self.0.get_mut(&id).unwrap()
 	}
 }
 
 #[derive(Clone, Debug)]
 pub struct Graph
 {
-	id: u8,
-	nodes: BTreeMap<usize, Node>
+	idx_map: HashMap<Uuid, usize>,
+	nodes: Vec<Node>
 }
 
 impl Graph {
 	pub fn new() -> Graph
 	{
 		Graph {
-			id: 1, // FIXME: Receive iteration of ids
-			nodes: BTreeMap::new()
+			idx_map: HashMap::new(),
+			nodes: Vec::new()
 		}
+	}
+
+	pub fn populate(&mut self)
+	{
+    	let mut nodes = &mut self.nodes;
+	    let trans = statics::DATASTORE.transaction().unwrap();
+	    let count = trans.get_vertex_count().unwrap();
+	    let idx_map: HashMap<Uuid, usize>;
+	    
+	    // Set the start_id according to the last of previous graph
+	    // if graph_id == 1 {
+	    //     let start_id = ...
+	    // }
+	    let mut id: usize = 1;
+
+	    if let Ok(x) = trans.get_vertices(&VertexQuery::All{ start_id: None, limit: LIMIT })
+	    {
+	        idx_map = create_uid_map(x, &mut nodes);
+	    	find_neighbors(trans, &mut nodes.clone(), &idx_map);
+
+	    }
+	    else {
+	        println!("No vertices found");
+	    }
 	}
 }
