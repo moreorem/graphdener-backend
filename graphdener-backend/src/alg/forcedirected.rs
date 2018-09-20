@@ -1,14 +1,13 @@
-
-use containers::nodes::Node;
+use models::nodes::Node;
 
 const MAX_DISPLACEMENT_SQUARED: f64 = 4.0;
 
 pub fn force_directed(mut nodes: Vec<Node>, L: f32, K_r: f32, K_s: f32, delta_t: f32) -> Vec<Node>
 {
-	// let L = 0.1; // spring rest length
-	// let K_r = 2.0; // repulsive force constant
-	// let K_s = 2.0; // spring constant
-	// let delta_t = 2.0; // time step
+	// L = spring rest length
+	// K_r = repulsive force constant
+	// K_s = spring constant
+	// delta_t = time step
 	let N = nodes.len();
 	// initialize net forces
 	println!("initializing net forces");

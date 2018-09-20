@@ -1,11 +1,12 @@
 use alg::forcedirected::force_directed;
 use rmp_rpc::{Service, Value};
 // use commandsold::Commands;
-use containers::graph::GraphContainer;
-use commands::initials::{import_paths, initialize_graph, populate_graph};
-use commands::retrievals::{get_edge, get_vertex, get_pos};
+use models::graph::GraphContainer;
+use commands::initials::{import_paths, initialize_graph, populate_graph, apply_circular};
+use commands::retrievals::{get_edge, get_vertex, get_pos, get_adjacency, get_node_type};
 use alg::circular;
 
+// FIXME: Find a better place for Graph Container initialization
 // Our server type
 #[derive(Clone)]
 pub struct Echo(pub GraphContainer);
@@ -30,9 +31,10 @@ impl Service for Echo
             "newgraph" => initialize_graph(params[0].as_u64().expect("expected id"), &mut self.0), 
             "populate" => populate_graph(params[0].as_u64().expect("expected id"), &mut self.0),
             // "diralg" => force_directed(),
-            // "ciralg" => circular::polygon(),
-            "getpos" => get_pos(params[0].as_u64().expect("expected id"), &self.0),
-            // "refresh" => to be called on every timer tic
+            "ciralg" => apply_circular(params[0].as_u64().expect("expected id"), &mut self.0),
+            "getnpos" => get_pos(params[0].as_u64().expect("expected id"), &self.0),
+            "getadj" => get_adjacency(params[0].as_u64().expect("expected id"), &self.0),
+            "getntype" => get_node_type(params[0].as_u64().expect("expected id"), &self.0),
             "get" => {
                 let canvas_id: u8 = params[2].as_u64().expect("invalid canvas id") as u8;
                 match params[0].as_str().expect("expected str") {

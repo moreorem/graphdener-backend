@@ -52,11 +52,12 @@ pub struct Node {
 	pub pos: Position,
 	pub force: Force,
 	pub neighbors: Vec<usize>,
+	pub typ: String
 }
 
 impl Node
 {
-	pub fn new(id: usize, position: (f64, f64), neighbors: Option<Vec<usize>>) -> Node
+	pub fn new(id: usize, position: (f64, f64), neighbors: Option<Vec<usize>>, typ: String) -> Node
 	{
 		Node 
 		{
@@ -68,7 +69,14 @@ impl Node
 			}
 			else {
 			    Vec::new()
-			}
+			},
+			typ
 		}
 	}
+
+	pub fn get_type(&self) -> String
+	{
+		self.typ.clone()
+	}
+
 }

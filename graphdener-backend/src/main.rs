@@ -4,33 +4,28 @@ extern crate graphdener;
 extern crate futures;
 extern crate rmp_rpc;
 extern crate tokio_core;
-extern crate rand; // TESTME: for random x,y
+extern crate rand; 
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate serde_json;
-
 extern crate uuid;
 
 use server::Echo;
-
 use std::net::SocketAddr;
-
 use futures::Stream;
 use rmp_rpc::serve;
 use tokio_core::net::TcpListener;
 use tokio_core::reactor::Core;
 
-use containers::graph::GraphContainer;
+use models::graph::GraphContainer;
 
 mod server;
 mod statics;
 mod io;
 mod commands;
-
-mod commandsold; // PENDING: Delete after migration to separate
 mod alg;
-mod containers;
+mod models;
 
 fn main() 
 {

@@ -1,6 +1,7 @@
 use rmp_rpc::Value;
 use super::super::io::filehandling;
-use super::super::containers::graph::GraphContainer;
+use super::super::models::graph::GraphContainer;
+use super::super::alg::circular;
 
 // Improved import function to accept an array of paths
 pub fn import_paths(path: &Vec<Value>, patternN: &str, patternE: &str) -> Result<Value, Value>
@@ -34,6 +35,20 @@ pub fn populate_graph(id: u64, container: &mut GraphContainer) -> Result<Value, 
 {
     let id: u8 = id as u8;
     container.get_mut_graph(id).populate();
-    println!("{:?}", container.0.get(&id)); // TESTME: are nodes full?
     Ok(Value::from(id))
 }
+
+pub fn apply_circular(id: u64, container: &mut GraphContainer) -> Result<Value, Value>
+{
+    let id: u8 = id as u8;
+    let n = container.get_graph(id).unwrap().count();
+    let positions = circular::polygon(n as u32);
+    let mut nodes = container.get_mut_graph(id).modify_nodes();
+    for (i,node) in nodes.iter().enumerate()
+    {
+        let (x, y) = (positions[i].0, positions[i].1);
+        node.clone().pos.set(x, y);
+    }
+    Ok(Value::from(id))
+}
+

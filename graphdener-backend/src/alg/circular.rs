@@ -31,12 +31,3 @@ pub fn polygon(n: u32) ->  Vec<(f64, f64)>
 	result
 }
 
-#[cfg(test)]
-mod tests {
-    use alg::circular::polygon;
-    #[test]
-    fn test_poly()
-    {  
-        println!("{:?}", polygon(5))
-    }
-}

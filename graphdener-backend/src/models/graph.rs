@@ -1,9 +1,8 @@
-use commands::calcs::{LIMIT, create_uid_map, find_neighbors};
+use commands::calcs::{create_uid_map, find_neighbors};
+use commands::database;
 use uuid::Uuid;
 use std::collections::{BTreeMap, HashMap};
 use super::nodes::Node;
-use statics;
-use graphdener::{Datastore, Transaction, VertexQuery};
 
 #[derive(Clone, Debug)]
 pub struct GraphContainer(pub BTreeMap<u8, Graph>);
@@ -27,9 +26,15 @@ impl GraphContainer
 		self.0.get_mut(&id).unwrap()
 	}
 
-	pub fn get_graph(&self, id: u8) -> &Graph
+	pub fn get_graph(&self, id: u8) -> Result<&Graph, String>
 	{
-		self.0.get(&id).unwrap()	
+		if let Some(x) = self.0.get(&id) {
+			Ok(x)
+		}
+		else {
+			Err(format!("Cannot find any graphs with id {}", id))
+		}
+
 	}
 }
 
@@ -51,9 +56,7 @@ impl Graph {
 
 	pub fn populate(&mut self)
 	{
-    	// let mut nodes = &mut self.nodes;
-	    let trans = statics::DATASTORE.transaction().unwrap();
-	    let count = trans.get_vertex_count().unwrap();
+	    let count = database::count();
 	    let idx_map: HashMap<Uuid, usize>;
 	    
 	    // TODO: Set the start_id according to the last of previous graph
@@ -62,10 +65,11 @@ impl Graph {
 	    // }
 	    let mut id: usize = 1;
 
-	    if let Ok(x) = trans.get_vertices(&VertexQuery::All{ start_id: None, limit: LIMIT })
+	    // PENDING: Move error checking to database
+	    if let Ok(x) = database::get_graph_vertices(None) 
 	    {
 	        idx_map = create_uid_map(x, &mut self.nodes);
-	    	find_neighbors(trans, &mut self.nodes, &idx_map);
+	    	find_neighbors(&mut self.nodes, &idx_map);
 	    }
 	    else {
 	        println!("No vertices found");
@@ -76,4 +80,38 @@ impl Graph {
 	{
 		self.nodes.iter().map(|x| x.pos.get()).collect()
 	}
+
+	pub fn get_types(&self) -> Vec<String>
+	{
+		self.nodes.iter().map(|x| x.get_type()).collect()
+	}
+
+	pub fn get_adj_list(&self) -> Vec<[u64; 2]>
+	{
+		let mut list: Vec<[u64; 2]> = Vec::new();
+		let mut a: [u64; 2] = [0, 0];
+
+		// TODO: Add weights in output or create a separate method for that
+		for (id, node) in self.nodes.iter().enumerate()
+		{
+			for neighbor in node.neighbors.iter() {
+				a[0] = id as u64;
+				a[1] = neighbor.clone() as u64;
+				list.append(&mut vec![a]);
+			}
+			
+		}
+		list
+	}
+
+	pub fn modify_nodes(&mut self) -> &mut Vec<Node>
+	{
+		&mut self.nodes
+	}
+
+	pub fn count(&self) -> usize
+	{
+		self.nodes.len()
+	}
+
 }

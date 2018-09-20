@@ -1,3 +1,4 @@
+// use uuid::Uuid;
 use uuid::Uuid;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Error, ErrorKind};
@@ -12,7 +13,6 @@ enum Importer {
 	NodeImporter,
 	EdgeImporter
 }
-
 
 fn process_n_line(line: String, caps: &Captures, relation_table: &mut NodeImporter ) -> ()
 {

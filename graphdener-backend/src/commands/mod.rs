@@ -1,10 +1,9 @@
 pub mod initials;
 pub mod retrievals;
 pub mod calcs;
+pub mod database;
 
 use rmp_rpc::Value;
-use commands::retrievals::Retriever;
-
 
 pub enum Command
 {
