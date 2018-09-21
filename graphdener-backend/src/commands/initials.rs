@@ -93,7 +93,6 @@ pub fn apply_random_pos(
     fn distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
         ((p1.0 - p2.0).powf(2.) + (p1.1 - p2.1).powf(2.)).sqrt()
     }
-    let min_distance = 0.02;
     let id: u8 = id as u8;
     let n = container.get_graph(id).unwrap().count();
     let mut rng = thread_rng();

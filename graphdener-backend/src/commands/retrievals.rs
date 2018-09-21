@@ -10,6 +10,7 @@ pub struct Retriever;
 // NEW ORIGIN
 pub fn get_pos(graph_id: u64, container: &GraphContainer) -> Result<Value, Value> {
     let id = graph_id as u8;
+    println!("{}", id);
     // Get positions from Graph struct with specific id
     let graph = container.get_graph(id).expect("Err");
     let positions = graph.get_positions();
