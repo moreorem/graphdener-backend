@@ -42,7 +42,7 @@ impl GraphContainer
 pub struct Graph
 {
 	idx_map: HashMap<Uuid, usize>,
-	nodes: Vec<Node>
+	pub nodes: Vec<Node>
 }
 
 impl Graph {
@@ -81,6 +81,12 @@ impl Graph {
 		self.nodes.iter().map(|x| x.pos.get()).collect()
 	}
 
+	pub fn get_mut_node(&mut self, id: usize) -> &mut Node
+	{
+		// println!("{:?}", self.nodes.iter().map(|x| x.pos));
+		&mut self.nodes[id]
+	}
+
 	pub fn get_types(&self) -> Vec<String>
 	{
 		self.nodes.iter().map(|x| x.get_type()).collect()
@@ -104,9 +110,17 @@ impl Graph {
 		list
 	}
 
-	pub fn modify_nodes(&mut self) -> &mut Vec<Node>
+	pub fn set_positions(&mut self, positions: Vec<(f64, f64)>, node_id: Option<usize> ) -> ()
 	{
-		&mut self.nodes
+		if let Some(x) = node_id {
+			self.nodes[x].pos.set(positions[0].0, positions[0].1);
+		}
+		else {
+			for (n, node) in self.nodes.iter_mut().enumerate()
+			{
+				node.pos.set(positions[n].0, positions[n].1);
+			}
+		}
 	}
 
 	pub fn count(&self) -> usize

@@ -1,13 +1,16 @@
+use models::graph::Graph;
 use models::nodes::Node;
 
-const MAX_DISPLACEMENT_SQUARED: f64 = 4.0;
-
-pub fn force_directed(mut nodes: Vec<Node>, L: f32, K_r: f32, K_s: f32, delta_t: f32) -> Vec<Node>
+const MAX_DISPLACEMENT_SQUARED: f64 = 24.0;
+//mut nodes: &mut Vec<Node>
+pub fn force_directed(mut graph: &mut Graph, L: f32, K_r: f32, K_s: f32, delta_t: f32) -> ()
 {
 	// L = spring rest length
 	// K_r = repulsive force constant
 	// K_s = spring constant
 	// delta_t = time step
+	// let mut nodes = &mut graph.nodes;
+	let mut nodes = graph.nodes.clone();
 	let N = nodes.len();
 	// initialize net forces
 	println!("initializing net forces");
@@ -23,8 +26,8 @@ pub fn force_directed(mut nodes: Vec<Node>, L: f32, K_r: f32, K_s: f32, delta_t:
 	spring(N, &mut nodes, K_r, L);
 
 	// update positions
-	update(N, &mut nodes, delta_t.into());
-	nodes
+	update(N, &mut nodes, delta_t.into(), graph);
+	println!("Done applying force directed algorithm.");
 }
 
 fn repulsion(N: usize, nodes: &mut Vec<Node>, repulsive_force: f32 ) -> ()
@@ -98,14 +101,14 @@ fn spring(N: usize, nodes: &mut Vec<Node>, repulsive_force: f32, spring_rest_len
 }
 
 // Update positions
-fn update(N: usize, nodes: &mut Vec<Node>, delta_t: f64) -> ()
+fn update(N: usize, nodes: &mut Vec<Node>, delta_t: f64, graph: &mut Graph) -> ()
 {
 	for i in 0..N-1
 	{
 		let mut node = &mut nodes[i];
 		let force = node.force.get();
 		let (dx, dy) = (delta_t * force.0 as f64, delta_t * force.1 as f64);
-		// let dy = delta_t * node.force.y as f64;
+
 		let displacementSquared = dx*dx + dy*dy;
 		if displacementSquared > MAX_DISPLACEMENT_SQUARED.into()
 		{
@@ -116,9 +119,10 @@ fn update(N: usize, nodes: &mut Vec<Node>, delta_t: f64) -> ()
 
 	 	let pos = node.pos.get();
 	 	node.pos.set(pos[0] + dx, pos[1] + dy);
-	 // 	node.pos.x = node.pos.x + dx;
-		// node.pos.y = node.pos.y + dy;
+	 	graph.get_mut_node(i).pos.set(pos[0] + dx, pos[1] + dy);
+ 		println!("AFTER: {:?}", pos);
 	}
+
 }
 
 

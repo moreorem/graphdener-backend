@@ -7,7 +7,6 @@ use rmp_rpc::Value;
 use std::collections::HashMap;
 use statics;
 use super::super::alg::forcedirected as fdir;
-use rand::prelude::*;
 use graphdener::{VertexQuery, Datastore, Transaction, Vertex};
 use super::database;
 
@@ -39,21 +38,16 @@ pub fn create_uid_map(vertices: Vec<Vertex>, nodes: &mut Vec<Node>) -> HashMap<U
     let count = vertices.len();
     // Map to translate Uuids to Ids
     let mut idx_map: HashMap<Uuid, usize> = HashMap::with_capacity(count as usize);
-    // call rng
-    let mut rng = thread_rng();
-    let mut x: f64;
-    let mut y: f64;
+    
     // First create Uuid to Id translation map
     for (idx, vert) in vertices.iter().enumerate()
     {
         idx_map.insert(vert.id, idx);
 
-        // Create random positions to begin with
-        x = rng.gen();
-        y = rng.gen();
+        
         
         // Create Node struct for current node without neighbors but with type and random pos
-        let node = Node::new(idx, (x,y), None, String::from(vert.t.0.clone()));
+        let node = Node::new(idx, (0.0, 0.0), None, String::from(vert.t.0.clone()));
         nodes.insert(idx, node);
     }
     idx_map
