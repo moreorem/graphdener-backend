@@ -113,9 +113,6 @@ fn edge_info(info_type: &str, draft_model: Vec<Edge>) -> Value {
 
 // Returns one of the attributes that reside in the metadata map of each vertex
 fn get_v_attribute(kind: &str) -> Vec<Value> {
-    // set_random_pos(); // TESTME: Delete afterwards
-    //use_algorithm(); // TESTME: Delete afterwards
-
     let trans = statics::DATASTORE.transaction().unwrap();
     let v = VertexQuery::All {
         start_id: None,

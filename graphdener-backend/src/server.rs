@@ -31,7 +31,7 @@ impl Service for Echo {
                 params[1].as_str().expect("expected string"),
                 params[2].as_str().expect("expected string"),
             ),
-            "newgraph" => initialize_graph(params[0].as_u64().expect("expected id"), &mut self.0),
+            "newgraph" => initialize_graph(&mut self.0),
             "populate" => populate_graph(params[0].as_u64().expect("expected id"), &mut self.0),
             "random" => {
                 apply_random_pos(params[0].as_u64().expect("expected id"), &mut self.0, 0.02)
