@@ -28,9 +28,10 @@ impl GraphContainer {
         }
     }
 
+    // Iterate maximum Id from container otherwise return 0
     pub fn get_next_id(&self) -> u8 {
         if let Some(x) = self.0.keys().max() {
-            *x
+            *x + 1
         } else {
             0
         }
