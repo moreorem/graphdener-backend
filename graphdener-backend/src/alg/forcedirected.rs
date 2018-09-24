@@ -2,7 +2,7 @@ use models::graph::Graph;
 use models::nodes::Node;
 
 const MAX_DISPLACEMENT_SQUARED: f64 = 24.0;
-//mut nodes: &mut Vec<Node>
+
 pub fn force_directed(mut graph: &mut Graph, L: f32, K_r: f32, K_s: f32, delta_t: f32) -> () {
     // L = spring rest length
     // K_r = repulsive force constant

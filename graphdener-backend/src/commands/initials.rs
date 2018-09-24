@@ -3,12 +3,17 @@ use super::super::alg::forcedirected;
 use super::super::io::filehandling;
 use super::super::models::graph::GraphContainer;
 use super::retrievals::get_pos;
+use io::filehandling::PatternFormat;
 use rand::prelude::*;
 use rmp_rpc::Value;
-use io::filehandling::PatternFormat;
 
 // Improved import function to accept an array of paths
-pub fn import_paths(path: &Vec<Value>, patternN: &str, patternE: &str, is_single_path: bool) -> Result<Value, Value> {
+pub fn import_paths(
+    path: &Vec<Value>,
+    patternN: &str,
+    patternE: &str,
+    is_single_path: bool,
+) -> Result<Value, Value> {
     println!("Importing: {} and {}", path[0], path[1]);
     // PENDING: Handle possibility of having only edgelist file
     // Define paths of files to parse
@@ -23,19 +28,26 @@ pub fn import_paths(path: &Vec<Value>, patternN: &str, patternE: &str, is_single
         let format = [&node_pattern[..], &edge_pattern[..]];
 
         // Call filehandling method
-        filehandling::import_files(node_list_path.unwrap(), edge_list_path.unwrap(), PatternFormat::Dual(format), is_single_path);
-    }
-    else {
+        filehandling::import_files(
+            node_list_path.unwrap(),
+            edge_list_path.unwrap(),
+            PatternFormat::Dual(format),
+            is_single_path,
+        );
+    } else {
         let unified_list_path = path[0].as_str();
         let mut unified_pattern: String = String::from("");
         unified_pattern.push_str(&format!(r#"{}"#, patternN));
         let format = [&unified_pattern[..]];
         // Call filehandling method
-        filehandling::import_files(unified_list_path.unwrap(), "", PatternFormat::Unified(format), is_single_path);
+        filehandling::import_files(
+            unified_list_path.unwrap(),
+            "",
+            PatternFormat::Unified(format),
+            is_single_path,
+        );
     }
-    
 
-    
     Ok(Value::from("paths imported"))
 }
 
