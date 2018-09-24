@@ -49,7 +49,6 @@ impl EdgeImporter
 
         }
 	}
-
 }
 
 pub struct NodeImporter
@@ -148,7 +147,6 @@ impl NodeImporter
         }
 		let msg = trans.get_vertex_count();
 	}
-
 }
 
 // Initializes the vertex attributes to be changed in every frame

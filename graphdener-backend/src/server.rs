@@ -30,6 +30,7 @@ impl Service for Echo {
                 params[0].as_array().expect("expected array"),
                 params[1].as_str().expect("expected string"),
                 params[2].as_str().expect("expected string"),
+                params[3].as_bool().expect("expected bool")
             ),
             "newgraph" => initialize_graph(&mut self.0),
             "populate" => populate_graph(params[0].as_u64().expect("expected id"), &mut self.0),

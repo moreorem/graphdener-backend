@@ -103,19 +103,45 @@ fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::
 	Ok(true)
 }
 
-pub fn import_files(vert_path: &str, edge_path: &str, format: &[&str; 2]) -> Result<(), &'static str>
+fn import_unified(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::Result<bool>
+{
+	println!("Unified Import...");
+	Ok(true)
+}
+
+pub fn import_files(vert_path: &str, edge_path: &str, format: PatternFormat, is_single_file: bool) -> Result<(), &'static str>
 {
 	let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
 	let e: bool;
 	let v: bool;
 
 	// Handle the possibility of not setting a node filepath
-    v = import_vertices(vert_path, &mut uuid_map, format[0]).unwrap();
-    e = import_edges(edge_path, &uuid_map, format[1]).unwrap();
-    if e && v {
+	match format {
+		PatternFormat::Dual(f) => {
+		    v = import_vertices(vert_path, &mut uuid_map, f[0]).unwrap();
+		    e = import_edges(edge_path, &uuid_map, f[1]).unwrap();
+    	},
+		PatternFormat::Unified(f) => {
+			// Handle Unified import
+			v = import_unified(vert_path, &mut uuid_map, f[0]).unwrap();
+			e = v;
+		},
+		_ => {
+			e = false;
+			v = false;
+		}
+	}
+	// Error Checking
+	if e && v {
     	Ok(())
     }
     else {
     	Err("There was an error with one or both of the files")
     }
+}
+
+pub enum PatternFormat<'a>
+{
+	Dual([&'a str; 2]),
+	Unified([&'a str; 1])
 }
