@@ -34,9 +34,10 @@ pub fn import_paths(
         // Define regular expressions
         let mut node_pattern: String = String::from("");
         let mut edge_pattern: String = String::from("");
-        node_pattern.push_str(&format!("{}", patterns[0]));
-        edge_pattern.push_str(&format!("{}", patterns[1]));
-        let format = [&node_pattern[..], &edge_pattern[..]];
+        let node_pattern = patterns[0].as_str().unwrap();
+        let edge_pattern = patterns[1].as_str().unwrap();
+        let format = [node_pattern, edge_pattern];
+        println!("format: {:?}", format);
 
         // Call filehandling method
         filehandling::import_files(
@@ -52,6 +53,8 @@ pub fn import_paths(
 
 // Initializes new graph. Activates when we want to draw an extra graph on a new canvas
 pub fn initialize_graph(container: &mut GraphContainer) -> Result<Value, Value> {
+    let v = database::get_graph_vertices(None).unwrap(); // TESTME: Delete afterwards
+    println!("{:?}", v); // TESTME: Delete afterwards
     let next_id = container.get_next_id();
     container.add_graph(next_id);
     Ok(Value::from(next_id))
