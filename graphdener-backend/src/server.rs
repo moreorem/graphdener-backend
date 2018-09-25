@@ -28,9 +28,9 @@ impl Service for Echo {
             // TODO: create function that returns the max graph id
             "import" => import_paths(
                 params[0].as_array().expect("expected array"),
-                params[1].as_str().expect("expected string"),
-                params[2].as_str().expect("expected string"),
-                params[3].as_bool().expect("expected bool")
+                params[1].as_array().expect("expected array"),
+                params[2].as_bool().expect("expected bool"),
+                params[3].as_array().expect("expected array"),
             ),
             "newgraph" => initialize_graph(&mut self.0),
             "populate" => populate_graph(params[0].as_u64().expect("expected id"), &mut self.0),

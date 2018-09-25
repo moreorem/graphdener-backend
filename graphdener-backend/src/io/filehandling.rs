@@ -56,13 +56,16 @@ fn import_vertices(
 ) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
+    println!("Vertex {}", re);
+    let re = Regex::new(r#"(?P<id>\d+)\s+"(?P<label>[^"]+)"\s+"(?P<type>[^"]+)""#).unwrap();
+    println!("Fixed re: {}", re);
 
     // Create temporary collection to handle import
     let mut relation_table = NodeImporter::new();
-    println!("Parsing file {}", path);
 
     for line in BufReader::new(file).lines() {
         let line_text = line.unwrap();
+
         let line_string = String::from(line_text);
         let caps: Captures;
         let id_label_type: (u32, &str, &str);
@@ -70,6 +73,7 @@ fn import_vertices(
         // Handle lines that are empty or do not fit in the expression
         if let Some(x) = re.captures(&line_string) {
             caps = re.captures(&line_string).unwrap();
+
             // Parse the line into the relation table
             process_n_line(line_string.to_owned(), &caps, &mut relation_table);
         } else {
@@ -120,6 +124,7 @@ fn import_unified(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io
     println!("Unified Import...");
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
+    println!("Unified {:?}", re);
 
     Ok(true)
 }
@@ -137,6 +142,7 @@ pub fn import_files(
     // Handle the possibility of not setting a node filepath
     match format {
         PatternFormat::Dual(f) => {
+            println!("{}", f[0]);
             v = import_vertices(vert_path, &mut uuid_map, f[0]).unwrap();
             e = import_edges(edge_path, &uuid_map, f[1]).unwrap();
         }

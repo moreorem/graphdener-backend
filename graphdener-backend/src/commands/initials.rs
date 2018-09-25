@@ -2,29 +2,40 @@ use super::super::alg::circular;
 use super::super::alg::forcedirected;
 use super::super::io::filehandling;
 use super::super::models::graph::GraphContainer;
+use super::database;
 use super::retrievals::get_pos;
 use io::filehandling::PatternFormat;
 use rand::prelude::*;
 use rmp_rpc::Value;
-
 // Improved import function to accept an array of paths
 pub fn import_paths(
     path: &Vec<Value>,
-    patternN: &str,
-    patternE: &str,
+    patterns: &Vec<Value>,
     is_single_path: bool,
+    col_names: &Vec<Value>,
 ) -> Result<Value, Value> {
     println!("Importing: {} and {}", path[0], path[1]);
-    // PENDING: Handle possibility of having only edgelist file
     // Define paths of files to parse
-    if !is_single_path {
+    if is_single_path {
+        let unified_list_path = path[0].as_str();
+        let mut unified_pattern: String = String::from("");
+        unified_pattern.push_str(&format!(r#"{}"#, patterns[0]));
+        let format = [&unified_pattern[..]];
+        // Call filehandling method
+        filehandling::import_files(
+            unified_list_path.unwrap(),
+            "",
+            PatternFormat::Unified(format),
+            is_single_path,
+        );
+    } else {
         let node_list_path = path[0].as_str();
         let edge_list_path = path[1].as_str();
         // Define regular expressions
         let mut node_pattern: String = String::from("");
         let mut edge_pattern: String = String::from("");
-        node_pattern.push_str(&format!(r#"{}"#, patternN));
-        edge_pattern.push_str(&format!(r#"{}"#, patternE));
+        node_pattern.push_str(&format!("{}", patterns[0]));
+        edge_pattern.push_str(&format!("{}", patterns[1]));
         let format = [&node_pattern[..], &edge_pattern[..]];
 
         // Call filehandling method
@@ -34,25 +45,12 @@ pub fn import_paths(
             PatternFormat::Dual(format),
             is_single_path,
         );
-    } else {
-        let unified_list_path = path[0].as_str();
-        let mut unified_pattern: String = String::from("");
-        unified_pattern.push_str(&format!(r#"{}"#, patternN));
-        let format = [&unified_pattern[..]];
-        // Call filehandling method
-        filehandling::import_files(
-            unified_list_path.unwrap(),
-            "",
-            PatternFormat::Unified(format),
-            is_single_path,
-        );
     }
 
     Ok(Value::from("paths imported"))
 }
 
 // Initializes new graph. Activates when we want to draw an extra graph on a new canvas
-// FIXME: Make a check on whether receiving an already existing id
 pub fn initialize_graph(container: &mut GraphContainer) -> Result<Value, Value> {
     let next_id = container.get_next_id();
     container.add_graph(next_id);
