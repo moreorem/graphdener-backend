@@ -37,7 +37,7 @@ fn process_e_line(line: String, caps: &Captures, relation_table: &mut EdgeImport
     relation_table.update(from_to);
 }
 
-fn process_u_line(line: String, caps: &Captures, relation_table: &mut EdgeImporter) -> () {
+fn process_u_line(line: String, caps: &Captures, relation_table: &mut NodeImporter) -> () {
     let parsed = (
         caps["id"].parse::<u32>().expect("expected digit"),
         caps["from"].parse::<u32>().expect("expected digit"),
@@ -56,9 +56,6 @@ fn import_vertices(
 ) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
-    println!("Vertex {}", re);
-    let re = Regex::new(r#"(?P<id>\d+)\s+"(?P<label>[^"]+)"\s+"(?P<type>[^"]+)""#).unwrap();
-    println!("Fixed re: {}", re);
 
     // Create temporary collection to handle import
     let mut relation_table = NodeImporter::new();
@@ -126,6 +123,29 @@ fn import_unified(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io
     let re = Regex::new(format).unwrap();
     println!("Unified {:?}", re);
 
+    // Create temporary collection to handle import
+    let mut relation_table = NodeImporter::new();
+
+    println!("Parsing file {}", path);
+    for line in BufReader::new(file).lines() {
+        let line_text = line.unwrap();
+
+        let line_string = String::from(line_text);
+        let caps: Captures;
+        let id_label_type: (u32, &str, &str);
+
+        // Handle lines that are empty or do not fit in the expression
+        if let Some(x) = re.captures(&line_string) {
+            caps = re.captures(&line_string).unwrap();
+
+            // Parse the line into the relation table
+
+            process_u_line(line_string.to_owned(), &caps, &mut relation_table);
+        } else {
+            continue;
+        }
+    }
+
     Ok(true)
 }
 
@@ -133,7 +153,6 @@ pub fn import_files(
     vert_path: &str,
     edge_path: &str,
     format: PatternFormat,
-    is_single_file: bool,
 ) -> Result<(), &'static str> {
     let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
     let e: bool;
@@ -168,3 +187,12 @@ pub enum PatternFormat<'a> {
     Dual([&'a str; 2]),
     Unified([&'a str; 1]),
 }
+
+// fn file_handle<T>(path: &str, format: &str, importer: T) -> () {
+//     let file = File::open(path).expect("There was a problem reading the vertices file.");
+//     let re = Regex::new(format).unwrap();
+//     println!("Unified {:?}", re);
+
+//     // Create temporary collection to handle import
+//     let mut relation_table = importer::new();
+// }

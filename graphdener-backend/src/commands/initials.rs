@@ -7,44 +7,38 @@ use super::retrievals::get_pos;
 use io::filehandling::PatternFormat;
 use rand::prelude::*;
 use rmp_rpc::Value;
+
 // Improved import function to accept an array of paths
 pub fn import_paths(
     path: &Vec<Value>,
     patterns: &Vec<Value>,
     is_single_path: bool,
-    col_names: &Vec<Value>,
+    col_names: &Vec<(Value, Value)>,
 ) -> Result<Value, Value> {
     println!("Importing: {} and {}", path[0], path[1]);
-    // Define paths of files to parse
+    // Define paths of files to parse if everything is in one file
     if is_single_path {
         let unified_list_path = path[0].as_str();
-        let mut unified_pattern: String = String::from("");
-        unified_pattern.push_str(&format!(r#"{}"#, patterns[0]));
-        let format = [&unified_pattern[..]];
+        let format = [patterns[0].as_str().unwrap()];
         // Call filehandling method
         filehandling::import_files(
             unified_list_path.unwrap(),
             "",
             PatternFormat::Unified(format),
-            is_single_path,
         );
-    } else {
+    }
+    // If there are separated nodes and edge files
+    else {
         let node_list_path = path[0].as_str();
         let edge_list_path = path[1].as_str();
         // Define regular expressions
-        let mut node_pattern: String = String::from("");
-        let mut edge_pattern: String = String::from("");
-        let node_pattern = patterns[0].as_str().unwrap();
-        let edge_pattern = patterns[1].as_str().unwrap();
-        let format = [node_pattern, edge_pattern];
-        println!("format: {:?}", format);
+        let format = [patterns[0].as_str().unwrap(), patterns[1].as_str().unwrap()];
 
         // Call filehandling method
         filehandling::import_files(
             node_list_path.unwrap(),
             edge_list_path.unwrap(),
             PatternFormat::Dual(format),
-            is_single_path,
         );
     }
 
