@@ -15,9 +15,16 @@ pub fn import_paths(
     is_single_path: bool,
     col_names: &Vec<(Value, Value)>,
 ) -> Result<Value, Value> {
-    println!("Importing: {} and {}", path[0], path[1]);
+    let mut names: Vec<(&str, &str)> = Vec::with_capacity(col_names.len());
+    println!("{:?}", col_names);
+    for pair in col_names.iter() {
+        names.push((pair.0.as_str().unwrap(), pair.1.as_str().unwrap()));
+    }
+
+    println!("These are the column names: {:?}", names);
     // Define paths of files to parse if everything is in one file
     if is_single_path {
+        println!("Importing single file {}", path[0]);
         let unified_list_path = path[0].as_str();
         let format = [patterns[0].as_str().unwrap()];
         // Call filehandling method
@@ -29,6 +36,7 @@ pub fn import_paths(
     }
     // If there are separated nodes and edge files
     else {
+        println!("Importing from files {} and {}", path[0], path[1]);
         let node_list_path = path[0].as_str();
         let edge_list_path = path[1].as_str();
         // Define regular expressions

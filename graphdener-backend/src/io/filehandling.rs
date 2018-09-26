@@ -1,5 +1,5 @@
 // use uuid::Uuid;
-use io::importer::{initialize_spatial, EdgeImporter, NodeImporter};
+use io::importer::{initialize_spatial, EdgeImporter, NodeImporter, UnifiedImporter};
 use regex::{Captures, Regex};
 use statics;
 use std::collections::HashMap;
@@ -37,7 +37,7 @@ fn process_e_line(line: String, caps: &Captures, relation_table: &mut EdgeImport
     relation_table.update(from_to);
 }
 
-fn process_u_line(line: String, caps: &Captures, relation_table: &mut NodeImporter) -> () {
+fn process_u_line(line: String, caps: &Captures, relation_table: &mut UnifiedImporter) -> () {
     let parsed = (
         caps["id"].parse::<u32>().expect("expected digit"),
         caps["from"].parse::<u32>().expect("expected digit"),
@@ -124,7 +124,7 @@ fn import_unified(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io
     println!("Unified {:?}", re);
 
     // Create temporary collection to handle import
-    let mut relation_table = NodeImporter::new();
+    let mut relation_table = UnifiedImporter::new();
 
     println!("Parsing file {}", path);
     for line in BufReader::new(file).lines() {

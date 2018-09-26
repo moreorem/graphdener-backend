@@ -11,6 +11,33 @@ use uuid::Uuid;
 pub enum Importer {
     NodeImporter,
     EdgeImporter,
+    UnifiedImporter,
+}
+
+pub struct UnifiedImporter {
+    pub unified_list: Vec<(u32, u32, u32, String, String, u8)>,
+    uuid_map: HashMap<u32, Uuid>,
+}
+
+impl UnifiedImporter {
+    pub fn new() -> UnifiedImporter {
+        UnifiedImporter {
+            unified_list: Vec::new(),
+            uuid_map: HashMap::new(),
+        }
+    }
+
+    pub fn update(&mut self, conn: (u32, u32, u32, &str, &str, u8)) {
+        let a = (
+            conn.0,
+            conn.1,
+            conn.2,
+            conn.3.to_string(),
+            conn.4.to_string(),
+            conn.5,
+        );
+        self.unified_list.push(a);
+    }
 }
 
 pub struct EdgeImporter {

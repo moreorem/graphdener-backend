@@ -28,6 +28,14 @@ impl GraphContainer {
         }
     }
 
+    pub fn remove_graph(&mut self, id: u8) -> Result<(), &str> {
+        if let Some(x) = self.0.remove(&id) {
+            Ok(())
+        } else {
+            Err("Could not delete graph")
+        }
+    }
+
     // Iterate maximum Id from container otherwise return 0
     pub fn get_next_id(&self) -> u8 {
         if let Some(x) = self.0.keys().max() {
