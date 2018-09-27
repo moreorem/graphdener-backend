@@ -1,12 +1,12 @@
 // use uuid::Uuid;
 use io::importer::{initialize_spatial, EdgeImporter, NodeImporter, UnifiedImporter};
+use io::pattern::{DualPattern, ImportType, SinglePattern};
 use regex::{Captures, Regex};
 use statics;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io::{BufRead, BufReader, Error, ErrorKind};
 use std::{fs::File, io};
 use uuid::Uuid;
-
 // TODO: Receive column declarations about which part is what (ex. source,target, label, type, weight)
 
 enum Importer {
@@ -14,8 +14,21 @@ enum Importer {
     EdgeImporter,
 }
 
-fn process_n_line(line: String, caps: &Captures, relation_table: &mut NodeImporter) -> () {
-    let id_label_type: (u32, &str, &str) = (
+fn process_n_line(
+    line: String,
+    caps: &Captures,
+    relation_table: &mut NodeImporter,
+    names: HashMap<&str, &str>,
+) -> () {
+    for (col_name, t) in names.iter() {
+        let parsed = match *t {
+            "int" => caps[*col_name].parse::<u32>().expect("expected digit"),
+            "qstr" => &caps[*col_name],
+            "str" => &caps[*col_name],
+        };
+    }
+
+    let id_label_type = (
         caps["id"].parse::<u32>().expect("expected digit"),
         &caps["label"],
         &caps["type"],
@@ -26,7 +39,7 @@ fn process_n_line(line: String, caps: &Captures, relation_table: &mut NodeImport
 // TODO: get caps keys from frontend
 
 fn process_e_line(line: String, caps: &Captures, relation_table: &mut EdgeImporter) -> () {
-    let from_to: (u32, u32, u32, &str, &str, u8) = (
+    let from_to = (
         caps["id"].parse::<u32>().expect("expected digit"),
         caps["from"].parse::<u32>().expect("expected digit"),
         caps["to"].parse::<u32>().expect("expected digit"),
@@ -53,6 +66,7 @@ fn import_vertices(
     path: &str,
     uuid_map: &mut HashMap<u32, Uuid>,
     format: &str,
+    names: HashMap<&str, &str>,
 ) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
@@ -65,7 +79,6 @@ fn import_vertices(
 
         let line_string = String::from(line_text);
         let caps: Captures;
-        let id_label_type: (u32, &str, &str);
 
         // Handle lines that are empty or do not fit in the expression
         if let Some(x) = re.captures(&line_string) {
@@ -88,7 +101,12 @@ fn import_vertices(
     Ok(true)
 }
 
-fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::Result<bool> {
+fn import_edges(
+    path: &str,
+    uuid_map: &HashMap<u32, Uuid>,
+    format: &str,
+    names: HashMap<&str, &str>,
+) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the edges file.");
     let from_to: (u32, u32);
     let t = 0;
@@ -117,7 +135,12 @@ fn import_edges(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::
     Ok(true)
 }
 
-fn import_unified(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::Result<bool> {
+fn import_unified(
+    path: &str,
+    uuid_map: &HashMap<u32, Uuid>,
+    format: &str,
+    names: HashMap<&str, &str>,
+) -> io::Result<bool> {
     println!("Unified Import...");
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
@@ -132,7 +155,6 @@ fn import_unified(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io
 
         let line_string = String::from(line_text);
         let caps: Captures;
-        let id_label_type: (u32, &str, &str);
 
         // Handle lines that are empty or do not fit in the expression
         if let Some(x) = re.captures(&line_string) {
@@ -150,24 +172,25 @@ fn import_unified(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io
 }
 
 pub fn import_files(
-    vert_path: &str,
-    edge_path: &str,
-    format: PatternFormat,
+    file_info: ImportType,
+    column_info: Vec<(&str, &str)>,
 ) -> Result<(), &'static str> {
     let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
     let e: bool;
     let v: bool;
 
+    let mut names: HashMap<&str, &str> = HashMap::new();
+    column_info.iter().map(|x| names.insert(x.0, x.1));
+
     // Handle the possibility of not setting a node filepath
-    match format {
-        PatternFormat::Dual(f) => {
-            println!("{}", f[0]);
-            v = import_vertices(vert_path, &mut uuid_map, f[0]).unwrap();
-            e = import_edges(edge_path, &uuid_map, f[1]).unwrap();
+    match file_info {
+        ImportType::Dual(x) => {
+            v = import_vertices(x.file_path[0], &mut uuid_map, x.expression[0], names).unwrap();
+            e = import_edges(x.file_path[1], &uuid_map, x.expression[1], names).unwrap();
         }
-        PatternFormat::Unified(f) => {
+        ImportType::Unified(x) => {
             // Handle Unified import
-            v = import_unified(vert_path, &mut uuid_map, f[0]).unwrap();
+            v = import_unified(x.file_path, &mut uuid_map, x.expression, names).unwrap();
             e = v;
         }
         _ => {
