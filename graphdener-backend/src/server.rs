@@ -1,13 +1,12 @@
-use alg::forcedirected::force_directed;
-use rmp_rpc::{Service, Value};
-// use commandsold::Commands;
-use alg::circular;
-use commands::initials::{
+use graphdener::commands::initials::{
     apply_circular, apply_force_directed, apply_random_pos, import_paths, initialize_graph,
     populate_graph,
 };
-use commands::retrievals::{get_adjacency, get_edge, get_node_type, get_pos, get_vertex};
-use models::graph::GraphContainer;
+use graphdener::commands::retrievals::{
+    get_adjacency, get_edge, get_node_type, get_pos, get_vertex,
+};
+use graphdener::models::graph::GraphContainer;
+use rmp_rpc::{Service, Value};
 
 // FIXME: Find a better place for Graph Container initialization
 // Our server type

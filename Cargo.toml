@@ -2,5 +2,6 @@
 
 members = [
     "graphdener-backend",
-    "lib",
+    "graphdenerdb-lib",
+    "graphdener-lib"
 ]

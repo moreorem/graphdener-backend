@@ -1,6 +1,6 @@
 use models::graph::GraphContainer;
 // use commands::calcs::{get_adj_list};
-use graphdener::{Datastore, Edge, Transaction, Vertex, VertexQuery};
+use graphdenerdb::{Datastore, Edge, Transaction, Vertex, VertexQuery};
 use rmp_rpc::Value;
 use statics;
 

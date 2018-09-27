@@ -1,5 +1,5 @@
-use graphdener::util;
-use graphdener::{
+use graphdenerdb::util;
+use graphdenerdb::{
     Datastore, EdgeDirection, EdgeKey, EdgeQuery, Transaction, Type, Vertex, VertexQuery,
 };
 use statics;

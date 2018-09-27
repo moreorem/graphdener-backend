@@ -1,5 +1,5 @@
 [package]
-name = "graphdener-lib"
+name = "graphdenerdb-lib"
 version = "0.15.0"
 authors = ["Orestes <o.moresis@outlook.com>"]
 description = "A graph database library"
@@ -13,7 +13,7 @@ license = "MPL-2.0"
 travis-ci = { repository = "graphdener/graphdener", branch = "master" }
 
 [lib]
-name = "graphdener"
+name = "graphdenerdb"
 path = "src/lib.rs"
 
 [features]
