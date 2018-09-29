@@ -1,3 +1,4 @@
+use super::super::commands::database;
 use graphdenerdb::util;
 use graphdenerdb::{
     Datastore, EdgeDirection, EdgeKey, EdgeQuery, Transaction, Type, Vertex, VertexQuery,
@@ -68,7 +69,6 @@ impl EdgeImporter {
     // Use this method only when there is only an edge list file
     pub fn create_edges(&self, uuid_map: &HashMap<u32, Uuid>) -> () {
         println!("Storing edges to database...");
-        let trans = statics::DATASTORE.transaction().unwrap();
 
         // iterate over every uuid in the hashmap and create each unique node into the db
         for val in self.edge_list.iter() {
@@ -78,17 +78,14 @@ impl EdgeImporter {
             let t = Type::new(val.4.to_owned()).unwrap();
             let l = &val.3;
             let w = &val.5;
-            let e = EdgeKey::new(*target, t, *source);
 
-            trans.create_edge(&e);
-            trans.set_edge_metadata(
-                &EdgeQuery::Edges {
-                    keys: vec![e.clone()],
-                },
-                "label",
-                &json!(l),
+            database::create_edges(
+                *target,
+                t,
+                *source,
+                Some(l.to_string()),
+                Some(w.to_string()),
             );
-            trans.set_edge_metadata(&EdgeQuery::Edges { keys: vec![e] }, "weight", &json!(w));
         }
     }
 }
@@ -189,7 +186,5 @@ pub fn initialize_spatial() {
         limit: 1000000000,
     };
     trans.set_vertex_metadata(&v, "pos", &json!([0., 0.]));
-    trans.set_vertex_metadata(&v, "size", &json!(1.));
-    trans.set_vertex_metadata(&v, "color", &json!((165, 0, 255)));
     trans.set_vertex_metadata(&v, "label", &json!(""));
 }

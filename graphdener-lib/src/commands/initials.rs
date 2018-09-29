@@ -20,35 +20,14 @@ pub fn import_paths(
     for pair in col_names.iter() {
         names.push((pair.0.as_str().unwrap(), pair.1.as_str().unwrap()));
     }
+
     let converted_path = path.iter().map(|x| x.as_str().unwrap()).collect();
-    let converted_pattern = path.iter().map(|x| x.as_str().unwrap()).collect();
+    let converted_pattern = patterns.iter().map(|x| x.as_str().unwrap()).collect();
 
     // Store import info to the corresponding struct
-    let import_info = ImportType::create_import(is_single_path, converted_path, converted_pattern);
-    filehandling::import_files(import_info, names);
-    // println!("These are the column names: {:?}", names);
-    // // Define paths of files to parse if everything is in one file
-    // if is_single_path {
-    //     println!("Importing single file {}", path[0]);
-    //     let unified_list_path = path[0].as_str();
-    //     let format = [patterns[0].as_str().unwrap()];
-    //     // Call filehandling method
-    //     filehandling::import_files(unified_list_path.unwrap(), "", ImportType);
-    // }
-    // // If there are separated nodes and edge files
-    // else {
-    //     println!("Importing from files {} and {}", path[0], path[1]);
-    //     let node_list_path = path[0].as_str();
-    //     let edge_list_path = path[1].as_str();
-    //     // Define regular expressions
-    //     let format = [patterns[0].as_str().unwrap(), patterns[1].as_str().unwrap()];
-
-    //     // Call filehandling method
-    //     filehandling::import_files(
-    //         node_list_path.unwrap(),
-    //         edge_list_path.unwrap(),
-    //         PatternFormat::Dual(format),
-    //     );
+    let import_info =
+        ImportType::create_import(is_single_path, converted_path, converted_pattern, names);
+    filehandling::import_files(import_info);
 
     Ok(Value::from("paths imported"))
 }

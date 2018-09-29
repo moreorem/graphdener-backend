@@ -76,22 +76,3 @@ pub fn find_neighbors(
     }
     Ok(true)
 }
-
-// pub fn use_algorithm() -> ()
-//     {
-//         match alg {
-
-//         }
-//         let nd = fdir::force_directed(nodes, 0.1, 0.1, 0.2, 2.0);
-
-//         for (uuid, id) in idx_map.iter() //trans.get_vertices(&VertexQuery::All{ start_id: None, limit: 1000000 }).unwrap().iter()
-//         {
-//             let (x,y) = nd[*id].pos.get();
-//             let v = VertexQuery::Vertices{ ids: vec!(*uuid) };
-//             trans.set_vertex_metadata(&v, "pos", &json!([x, y]));
-//         }
-
-//     }
-
-// TODO: Make a database updater to be runned after every pause of actions
-// TODO: Separate methods into initial, repeating, backend
