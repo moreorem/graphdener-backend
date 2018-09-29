@@ -4,7 +4,7 @@ use graphdenerdb::{
     Datastore, EdgeKey, EdgeQuery, Transaction, Type, Vertex, VertexQuery,
 };
 use statics;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use uuid::Uuid;
 use super::filehandling::ParsedColumn;
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
@@ -113,8 +113,9 @@ pub struct NodeImporter {
     node_list: Vec<u32>,
     type_list: Vec<String>,
     type_map: HashMap<String, Vec<Uuid>>,
-    pub meta_list: HashMap<String, Vec<String>>,
+    pub meta_list: BTreeMap<u32, HashMap<String, String>>,
     uuid_map: HashMap<u32, Uuid>, // PENDING: Deprecated delete if sure
+    current_id: u32
 }
 
 impl NodeImporter {
@@ -124,7 +125,8 @@ impl NodeImporter {
             type_list: Vec::new(),
             type_map: HashMap::new(),
             uuid_map: HashMap::new(),
-            meta_list: HashMap::new(),
+            meta_list: BTreeMap::new(),
+            current_id: 0
         }
     }
 
@@ -135,14 +137,16 @@ impl NodeImporter {
         match name {
             "n_id" => { if let ParsedColumn::Numeric(x) = data {self.node_list.push(x)} else {panic!("unknown column type");}},
             "n_type" => { if let ParsedColumn::Text(x) = data {self.type_list.push(x)} else {panic!("unknown column type");}},
-            _ => { if let ParsedColumn::Meta(x) = data { meta = x} else {panic!("unknown column type");}}
+            _ => { if let ParsedColumn::Meta(x) = data { meta = x.to_owned()} else {panic!("unknown column type");}}
         };
 
         // If meta variable has data, pass it to the metadata list
         if !meta.is_empty(){
-            let a = self.meta_list.entry(name.to_string()).or_insert(vec![meta.clone()]);
-            a.push(meta);
+            let mut meta_map = HashMap::new();
+            meta_map.insert(name.to_string(), meta);
+            self.meta_list.insert(self.current_id, meta_map);
         }
+        self.current_id = *self.node_list.last().unwrap();
     }
 
     pub fn generate_id_map(&mut self) -> Result<HashMap<u32, Uuid>, bool> {
