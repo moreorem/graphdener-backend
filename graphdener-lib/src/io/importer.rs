@@ -1,11 +1,12 @@
 use super::super::commands::database;
 use graphdenerdb::util;
 use graphdenerdb::{
-    Datastore, EdgeDirection, EdgeKey, EdgeQuery, Transaction, Type, Vertex, VertexQuery,
+    Datastore, EdgeKey, EdgeQuery, Transaction, Type, Vertex, VertexQuery,
 };
 use statics;
 use std::collections::HashMap;
 use uuid::Uuid;
+use super::filehandling::ParsedColumn;
 // Contains one or more ways of temporarily storing node relations. It usually contains an edge list, directions, or even weights
 
 // TODO: Simplify importers. Only write to database and use graphcontainer afterwards to create Uuid_map and edgelists
@@ -66,6 +67,24 @@ impl EdgeImporter {
         self.edge_list.push(a);
     }
 
+    // To be called for every column in every line
+    // pub fn insert_data(&mut self, name: &str, data: ParsedColumn)
+    // {
+    //     let mut meta = String::from("");
+    //     match name {
+    //         "e_from" => { if let ParsedColumn::Numeric(x) = data {self.node_list.push(x)} else {panic!("unknown column type");}},
+    //         "e_to" => { if let ParsedColumn::Numeric(x) = data {self.node_list.push(x)} else {panic!("unknown column type");}},
+    //         "e_type" => { if let ParsedColumn::Text(x) = data {self.type_list.push(x)} else {panic!("unknown column type");}},
+    //         _ => { if let ParsedColumn::Meta(x) = data { meta = x} else {panic!("unknown column type");}}
+    //     };
+
+    //     // If meta variable has data, pass it to the metadata list
+    //     if !meta.is_empty(){
+    //         let a = self.meta_list.entry(name.to_string()).or_insert(vec![meta.clone()]);
+    //         a.push(meta);
+    //     }
+    // }
+
     // Use this method only when there is only an edge list file
     pub fn create_edges(&self, uuid_map: &HashMap<u32, Uuid>) -> () {
         println!("Storing edges to database...");
@@ -91,8 +110,10 @@ impl EdgeImporter {
 }
 
 pub struct NodeImporter {
-    node_list: Vec<(u32, String, String)>,
+    node_list: Vec<u32>,
+    type_list: Vec<String>,
     type_map: HashMap<String, Vec<Uuid>>,
+    pub meta_list: HashMap<String, Vec<String>>,
     uuid_map: HashMap<u32, Uuid>, // PENDING: Deprecated delete if sure
 }
 
@@ -100,26 +121,36 @@ impl NodeImporter {
     pub fn new() -> NodeImporter {
         NodeImporter {
             node_list: Vec::new(),
+            type_list: Vec::new(),
             type_map: HashMap::new(),
             uuid_map: HashMap::new(),
+            meta_list: HashMap::new(),
         }
     }
 
-    pub fn update(&mut self, id_label_type: (u32, &str, &str)) {
-        let a = (
-            id_label_type.0,
-            id_label_type.1.to_string(),
-            id_label_type.2.to_string(),
-        );
-        self.node_list.push(a);
+    // To be called for every column in every line
+    pub fn insert_data(&mut self, name: &str, data: ParsedColumn)
+    {
+        let mut meta = String::from("");
+        match name {
+            "n_id" => { if let ParsedColumn::Numeric(x) = data {self.node_list.push(x)} else {panic!("unknown column type");}},
+            "n_type" => { if let ParsedColumn::Text(x) = data {self.type_list.push(x)} else {panic!("unknown column type");}},
+            _ => { if let ParsedColumn::Meta(x) = data { meta = x} else {panic!("unknown column type");}}
+        };
+
+        // If meta variable has data, pass it to the metadata list
+        if !meta.is_empty(){
+            let a = self.meta_list.entry(name.to_string()).or_insert(vec![meta.clone()]);
+            a.push(meta);
+        }
     }
 
     pub fn generate_id_map(&mut self) -> Result<HashMap<u32, Uuid>, bool> {
         let mut a: Vec<u32> = Vec::new();
         let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
 
-        for tup in &self.node_list {
-            a.push(tup.0);
+        for tup in self.node_list.iter() {
+            a.push(*tup);
         }
 
         // probably would be faster if map function is used
@@ -136,28 +167,28 @@ impl NodeImporter {
         Ok(uuid_map)
     }
 
-    pub fn generate_type_map(&mut self) -> Result<bool, bool> {
-        // Create a hashmap with type as key and vector of uuids as the values that belong to that type
-        for tup in &self.node_list {
-            let t = tup.2.clone();
-            let id = tup.0.clone();
-            let uuid = *self.uuid_map.get(&id).unwrap();
-            let mut last_entry: Vec<Uuid>;
+    // pub fn generate_type_map(&mut self) -> Result<bool, bool> {
+    //     // Create a hashmap with type as key and vector of uuids as the values that belong to that type
+    //     for tup in &self.type_map {
+    //         let t = tup.2.clone();
+    //         let id = tup.0.clone();
+    //         let uuid = *self.uuid_map.get(&id).unwrap();
+    //         let mut last_entry: Vec<Uuid>;
 
-            // Search type_map for a type that has been read from node_list. If it exists already
-            // push the next id into its value vector
-            if let Some(x) = &self.type_map.get(&t) {
-                last_entry = x.to_vec();
-            } else {
-                last_entry = Vec::new();
-            }
+    //         // Search type_map for a type that has been read from node_list. If it exists already
+    //         // push the next id into its value vector
+    //         if let Some(x) = &self.type_map.get(&t) {
+    //             last_entry = x.to_vec();
+    //         } else {
+    //             last_entry = Vec::new();
+    //         }
 
-            last_entry.push(uuid);
+    //         last_entry.push(uuid);
 
-            &self.type_map.insert(t, last_entry);
-        }
-        Ok(true)
-    }
+    //         &self.type_map.insert(t, last_entry);
+    //     }
+    //     Ok(true)
+    // }
 
     pub fn create_vertices(&self) -> () {
         println!("Storing vertices to database...");
