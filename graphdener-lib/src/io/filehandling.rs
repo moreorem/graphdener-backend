@@ -42,7 +42,7 @@ fn parse_line(
         // handle types
         let idx = RECOGNIZED_NAMES.iter().position(|&x| x == *name).unwrap();
         let typ = RECOGNIZED_TYPES[idx];
-        // println!("{:?} {}", &caps[*name], name); //for debugging
+
         let data: ParsedColumn = match typ {
             "str" => ParsedColumn::Text(caps[*name].to_string()),
             "int" => ParsedColumn::Numeric(caps[*name].parse::<u32>().expect("expected digit")),
@@ -108,9 +108,7 @@ fn import_vertices(
         } else {
             continue;
         }
-
     }
-    println!("{:?}", relation_table.meta_list);
     *uuid_map = relation_table.generate_id_map().unwrap();
     // relation_table.generate_type_map();
     relation_table.create_vertices();
@@ -231,12 +229,3 @@ pub enum PatternFormat<'a> {
     Dual([&'a str; 2]),
     Unified([&'a str; 1]),
 }
-
-// fn file_handle<T>(path: &str, format: &str, importer: T) -> () {
-//     let file = File::open(path).expect("There was a problem reading the vertices file.");
-//     let re = Regex::new(format).unwrap();
-//     println!("Unified {:?}", re);
-
-//     // Create temporary collection to handle import
-//     let mut relation_table = importer::new();
-// }

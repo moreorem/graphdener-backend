@@ -111,8 +111,7 @@ impl EdgeImporter {
 
 pub struct NodeImporter {
     node_list: Vec<u32>,
-    type_list: Vec<String>,
-    type_map: HashMap<String, Vec<Uuid>>,
+    pub type_list: Vec<(u32, String)>,
     pub meta_list: BTreeMap<u32, HashMap<String, String>>,
     uuid_map: HashMap<u32, Uuid>, // PENDING: Deprecated delete if sure
     current_id: u32
@@ -123,7 +122,7 @@ impl NodeImporter {
         NodeImporter {
             node_list: Vec::new(),
             type_list: Vec::new(),
-            type_map: HashMap::new(),
+            //type_map: HashMap::new(),
             uuid_map: HashMap::new(),
             meta_list: BTreeMap::new(),
             current_id: 0
@@ -131,12 +130,19 @@ impl NodeImporter {
     }
 
     // To be called for every column in every line
+    // Nodes Step 1
     pub fn insert_data(&mut self, name: &str, data: ParsedColumn)
     {
         let mut meta = String::from("");
         match name {
-            "n_id" => { if let ParsedColumn::Numeric(x) = data {self.node_list.push(x)} else {panic!("unknown column type");}},
-            "n_type" => { if let ParsedColumn::Text(x) = data {self.type_list.push(x)} else {panic!("unknown column type");}},
+            "n_id" => { 
+                if let ParsedColumn::Numeric(x) = data {self.node_list.push(x)} 
+                else {panic!("unknown column type");}
+            },
+            "n_type" => { 
+                if let ParsedColumn::Text(x) = data {self.type_list.push((self.current_id, x))} 
+                else {panic!("unknown column type");} 
+            },
             _ => { if let ParsedColumn::Meta(x) = data { meta = x.to_owned()} else {panic!("unknown column type");}}
         };
 
@@ -149,12 +155,13 @@ impl NodeImporter {
         self.current_id = *self.node_list.last().unwrap();
     }
 
+    // Nodes Step 2
     pub fn generate_id_map(&mut self) -> Result<HashMap<u32, Uuid>, bool> {
         let mut a: Vec<u32> = Vec::new();
         let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
 
-        for tup in self.node_list.iter() {
-            a.push(*tup);
+        for id in self.node_list.iter() {
+            a.push(*id);
         }
 
         // probably would be faster if map function is used
@@ -171,42 +178,24 @@ impl NodeImporter {
         Ok(uuid_map)
     }
 
-    // pub fn generate_type_map(&mut self) -> Result<bool, bool> {
-    //     // Create a hashmap with type as key and vector of uuids as the values that belong to that type
-    //     for tup in &self.type_map {
-    //         let t = tup.2.clone();
-    //         let id = tup.0.clone();
-    //         let uuid = *self.uuid_map.get(&id).unwrap();
-    //         let mut last_entry: Vec<Uuid>;
-
-    //         // Search type_map for a type that has been read from node_list. If it exists already
-    //         // push the next id into its value vector
-    //         if let Some(x) = &self.type_map.get(&t) {
-    //             last_entry = x.to_vec();
-    //         } else {
-    //             last_entry = Vec::new();
-    //         }
-
-    //         last_entry.push(uuid);
-
-    //         &self.type_map.insert(t, last_entry);
-    //     }
-    //     Ok(true)
-    // }
-
+    // Nodes Step 3
     pub fn create_vertices(&self) -> () {
         println!("Storing vertices to database...");
         let trans = statics::DATASTORE.transaction().unwrap();
         let mut v: Vertex;
 
-        let mut uuid_list: Vec<&Uuid> = Vec::new();
+        let data: Vec<(Uuid, String)> = self.type_list.iter().map(|(x,y)| (*self.uuid_map.get(&x).unwrap(), y.to_owned())).collect();
 
-        // iterate over every uuid in the hashmap and create each unique node into the db
-        for (key, val) in self.type_map.iter() {
-            for uuid in val.iter() {
-                v = Vertex::with_id(*uuid, Type::new(key.to_string()).unwrap());
+        for pair in data.iter() {
+            v = Vertex::with_id(pair.0, Type::new(pair.1.to_string()).unwrap());
+            trans.create_vertex(&v);
+        }
 
-                let msg = trans.create_vertex(&v);
+        // Store the metadata for vertices as well
+        for (id, meta) in self.meta_list.iter() {
+            let uid = *self.uuid_map.get(&id).unwrap();
+            for (name, value) in meta.into_iter() {
+                database::set_vertex_metadata(Some(uid), (name.to_owned(), value.to_owned()));
             }
         }
         let msg = trans.get_vertex_count();

@@ -1,3 +1,4 @@
+use graphdenerdb::VertexMetadata;
 use graphdenerdb::{
     Datastore, Edge, EdgeKey, EdgeQuery, Error, Transaction, Type, Vertex, VertexQuery,
 };
@@ -42,6 +43,38 @@ pub fn set_vertex_position(uuid: Option<Uuid>, position: [f64; 2]) -> () {
         };
     }
     trans.set_vertex_metadata(&v, "pos", &json!(position));
+}
+
+pub fn set_vertex_metadata(uuid: Option<Uuid>, data: (String, String)) -> () {
+    let trans = statics::DATASTORE.transaction().unwrap();
+    let v: VertexQuery;
+
+    if let Some(x) = uuid {
+        v = VertexQuery::Vertices { ids: vec![x] };
+    } else {
+        v = VertexQuery::All {
+            start_id: None,
+            limit: LIMIT,
+        };
+    }
+
+    trans.set_vertex_metadata(&v, &data.0, &json!(data.1));
+}
+
+pub fn get_vertex_metadata(uuid: Option<Uuid>, name: &str) -> Result<Vec<VertexMetadata>, Error>
+{
+    let trans = statics::DATASTORE.transaction().unwrap();
+    let v: VertexQuery;
+
+    if let Some(x) = uuid {
+        v = VertexQuery::Vertices { ids: vec![x] };
+    } else {
+        v = VertexQuery::All {
+            start_id: None,
+            limit: LIMIT,
+        };
+    }
+    trans.get_vertex_metadata(&v, name)
 }
 
 pub fn create_edges(
