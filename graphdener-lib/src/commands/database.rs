@@ -61,8 +61,7 @@ pub fn set_vertex_metadata(uuid: Option<Uuid>, data: (String, String)) -> () {
     trans.set_vertex_metadata(&v, &data.0, &json!(data.1));
 }
 
-pub fn get_vertex_metadata(uuid: Option<Uuid>, name: &str) -> Result<Vec<VertexMetadata>, Error>
-{
+pub fn get_vertex_metadata(uuid: Option<Uuid>, name: &str) -> Result<Vec<VertexMetadata>, Error> {
     let trans = statics::DATASTORE.transaction().unwrap();
     let v: VertexQuery;
 
@@ -103,4 +102,13 @@ pub fn create_edges(
         "weight",
         &json!(weight),
     );
+}
+
+pub fn create_vertices(pair: (Uuid, String)) -> Result<bool, Error> {
+    let trans = statics::DATASTORE.transaction().unwrap();
+
+    let mut v: Vertex;
+
+    v = Vertex::with_id(pair.0, Type::new(pair.1).unwrap());
+    trans.create_vertex(&v)
 }

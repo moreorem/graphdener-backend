@@ -13,3 +13,4 @@ pub mod commands;
 mod io;
 pub mod models;
 mod statics;
+mod traits;
