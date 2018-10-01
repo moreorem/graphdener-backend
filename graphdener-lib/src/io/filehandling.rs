@@ -25,6 +25,7 @@ fn parse_line<T: Import>(
     caps: &Captures,
     importer: &mut T,
     names: Vec<&str>, // This is what differs between single and unified
+    line: usize,
 ) -> () {
     // In single file it will receive all of the names
     // Iterate over every column
@@ -43,7 +44,7 @@ fn parse_line<T: Import>(
             _ => ParsedColumn::Meta(caps[*name].to_string()),
         };
 
-        importer.insert_data(name, data);
+        importer.insert_data(name, data, line);
     }
 }
 
@@ -63,7 +64,7 @@ fn import_vertex_file(
     let mut importer = NodeImporter::new();
 
     // Iterate over every line
-    for line in BufReader::new(file).lines() {
+    for (i, line) in BufReader::new(file).lines().enumerate() {
         let line_text = line.unwrap();
 
         let line_string = String::from(line_text);
@@ -73,22 +74,18 @@ fn import_vertex_file(
         if let Some(x) = re.captures(&line_string) {
             caps = re.captures(&line_string).unwrap();
             // Parse the line into the relation table
-            parse_line(&caps, &mut importer, column_names.to_vec());
+            parse_line(&caps, &mut importer, column_names.to_vec(), i);
         } else {
             continue;
         }
     }
     *uuid_map = importer.generate_id_map().unwrap();
-    importer.create_vertices();
+    importer.insert_to_db();
     // initialize_spatial();
     Ok(true)
 }
 
-fn import_edge_file(
-    path: &str,
-    uuid_map: &mut HashMap<u32, Uuid>,
-    format: &str,
-) -> io::Result<bool> {
+fn import_edge_file(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
 
@@ -97,9 +94,9 @@ fn import_edge_file(
     let column_names = &column_names[1..];
 
     // Create temporary collection to handle import
-    let mut importer = EdgeImporter::new();
+    let mut importer = EdgeImporter::new(&uuid_map);
 
-    for line in BufReader::new(file).lines() {
+    for (i, line) in BufReader::new(file).lines().enumerate() {
         let line_text = line.unwrap();
         let line_string = String::from(line_text);
         let caps: Captures;
@@ -107,13 +104,13 @@ fn import_edge_file(
         // Handle lines that are empty or do not fit in the expression
         if let Some(x) = re.captures(&line_string) {
             caps = re.captures(&line_string).unwrap();
-            parse_line(&caps, &mut importer, column_names.to_vec());
+            parse_line(&caps, &mut importer, column_names.to_vec(), i);
         } else {
             continue;
         }
     }
     // Create number of vertices as many as the variety of uuids
-    // importer.create_edges(&uuid_map);
+    importer.insert_to_db();
     Ok(true)
 }
 
@@ -168,8 +165,7 @@ pub fn import_files(file_info: ImportType) -> Result<(), &'static str> {
             x.e_names.iter().map(|x| e_names.insert(x.0, x.1));
             // Call separate importers
             v = import_vertex_file(x.file_path[0], &mut uuid_map, x.expression[0]).unwrap();
-            // e = import_edges(x.file_path[1], &uuid_map, x.expression[1]).unwrap();
-            e = true;
+            e = import_edge_file(x.file_path[1], &uuid_map, x.expression[1]).unwrap();
         }
         ImportType::Unified(x) => {
             // Convert name vector to hashmap

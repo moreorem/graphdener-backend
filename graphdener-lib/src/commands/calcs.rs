@@ -16,7 +16,7 @@ use uuid::Uuid;
 //         let mut idx_map: HashMap<Uuid, usize> = HashMap::new();
 //         let i = 0;
 //         let v = VertexQuery::All{ start_id: None, limit: LIMIT };
-//         let t = trans.get_vertex_metadata(&v, "pos").unwrap(); // FIXME: Prefer to use just uuid query
+//         let t = trans.get_vertex_metadata(&v, "pos").unwrap();
 
 //         // Create index map in order to create the adjacency list next
 //         for (i, x) in t.iter().enumerate()

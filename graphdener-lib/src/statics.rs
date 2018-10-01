@@ -14,5 +14,5 @@ pub static RECOGNIZED_NAMES: [&str; 9] = [
 ];
 
 pub static RECOGNIZED_TYPES: [&str; 9] = [
-    "int", "meta", "str", "int", "int", "int", "str", "str", "dec",
+    "int", "meta", "str", "int", "int", "int", "str", "meta", "meta",
 ];
