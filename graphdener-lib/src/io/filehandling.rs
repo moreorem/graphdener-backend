@@ -27,20 +27,30 @@ fn parse_line<T: Import>(
     names: Vec<&str>, // This is what differs between single and unified
     line: usize,
 ) -> () {
+    importer.add_dummy_type("unknown");
+    // PENDING: Make a check to replace obligatory fields with a dummy value
     // In single file it will receive all of the names
     // Iterate over every column
     for name in names.iter() {
         // handle types
-        let idx = statics::RECOGNIZED_NAMES
-            .iter()
-            .position(|&x| x == *name)
-            .unwrap();
-        let typ = statics::RECOGNIZED_TYPES[idx];
+        // let idx = statics::RECOGNIZED_NAMES
+        //     .iter()
+        //     .position(|&x| x == *name)
+        //     .unwrap();
+        // let typ = statics::RECOGNIZED_TYPES[idx];
+        // let data: ParsedColumn = match typ {
+        //     "str" => ParsedColumn::Text(caps[*name].to_string()),
+        //     "int" => ParsedColumn::Numeric(caps[*name].parse::<u32>().expect("expected digit")),
+        //     "dec" => ParsedColumn::Decimal(caps[*name].parse::<f64>().expect("expected decimal")),
+        //     _ => ParsedColumn::Meta(caps[*name].to_string()),
+        // };
+        // PENDING: Improve conditionals, receive types somehow different
+        let data: ParsedColumn = match *name {
+            "n_id" | "e_id" | "e_from" | "e_to" | "e_weight" => {
+                ParsedColumn::Numeric(caps[*name].parse::<u32>().expect("n_id is not numeric!"))
+            }
+            "n_type" | "e_type" => ParsedColumn::Text(caps[*name].to_string()),
 
-        let data: ParsedColumn = match typ {
-            "str" => ParsedColumn::Text(caps[*name].to_string()),
-            "int" => ParsedColumn::Numeric(caps[*name].parse::<u32>().expect("expected digit")),
-            "dec" => ParsedColumn::Decimal(caps[*name].parse::<f64>().expect("expected decimal")),
             _ => ParsedColumn::Meta(caps[*name].to_string()),
         };
 
@@ -55,13 +65,18 @@ fn import_vertex_file(
 ) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
+    let has_n_type = true;
 
     // collect the column names as they get recognized
-    let column_names: Vec<&str> = re.capture_names().map(|x| x.unwrap_or("")).collect();
-    let column_names = &column_names[1..];
+    let mut column_names: Vec<&str> = re.capture_names().map(|x| x.unwrap_or("")).collect();
+    column_names.remove(0);
+    // Check if mandatory columns are missing
+    if !column_names.iter().any(|&x| x == "n_type") {
+        let has_n_type = false;
+    }
 
     // Create temporary collection to handle import
-    let mut importer = NodeImporter::new();
+    let mut importer = NodeImporter::new(has_n_type);
 
     // Iterate over every line
     for (i, line) in BufReader::new(file).lines().enumerate() {
@@ -73,28 +88,34 @@ fn import_vertex_file(
         // Handle lines that are empty or do not fit in the expression
         if let Some(x) = re.captures(&line_string) {
             caps = re.captures(&line_string).unwrap();
+
             // Parse the line into the relation table
             parse_line(&caps, &mut importer, column_names.to_vec(), i);
         } else {
             continue;
         }
     }
-    *uuid_map = importer.generate_id_map().unwrap();
-    importer.insert_to_db();
-    // initialize_spatial();
+    importer.generate_id_map(uuid_map);
+    println!("{:?}", uuid_map);
+    importer.insert_to_db(uuid_map);
     Ok(true)
 }
 
 fn import_edge_file(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
-
+    let has_e_type = true;
     // collect the column names as they get recognized
-    let column_names: Vec<&str> = re.capture_names().map(|x| x.unwrap_or("")).collect();
-    let column_names = &column_names[1..];
+    let mut column_names: Vec<&str> = re.capture_names().map(|x| x.unwrap_or("")).collect();
+    column_names.remove(0);
+
+    // Check if mandatory columns are missing
+    if !column_names.iter().any(|&x| x == "e_type") {
+        let has_e_type = false;
+    }
 
     // Create temporary collection to handle import
-    let mut importer = EdgeImporter::new(&uuid_map);
+    let mut importer = EdgeImporter::new(has_e_type);
 
     for (i, line) in BufReader::new(file).lines().enumerate() {
         let line_text = line.unwrap();
@@ -110,42 +131,43 @@ fn import_edge_file(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> 
         }
     }
     // Create number of vertices as many as the variety of uuids
-    importer.insert_to_db();
+    importer.insert_to_db(uuid_map);
     Ok(true)
 }
 
-// fn import_unified(
-//     path: &str,
-//     uuid_map: &HashMap<u32, Uuid>,
-//     format: &str,
-//     names: HashMap<&str, &str>,
-// ) -> io::Result<bool> {
+// fn import_unified(path: &str, uuid_map: &mut HashMap<u32, Uuid>, format: &str) -> io::Result<bool> {
 //     println!("Unified Import...");
 //     let file = File::open(path).expect("There was a problem reading the vertices file.");
 //     let re = Regex::new(format).unwrap();
 //     println!("Unified {:?}", re);
-
+//     // collect the column names as they get recognized
+//     let column_names: Vec<&str> = re.capture_names().map(|x| x.unwrap_or("")).collect();
+//     let column_names = &column_names[1..];
 //     // Create temporary collection to handle import
-//     let mut relation_table = UnifiedImporter::new();
+//     let mut n_importer = NodeImporter::new();
+//     let mut e_importer = EdgeImporter::new();
 
-//     println!("Parsing file {}", path);
-//     for line in BufReader::new(file).lines() {
+//     for (i, line) in BufReader::new(file).lines().enumerate() {
 //         let line_text = line.unwrap();
-
 //         let line_string = String::from(line_text);
 //         let caps: Captures;
 
 //         // Handle lines that are empty or do not fit in the expression
 //         if let Some(x) = re.captures(&line_string) {
 //             caps = re.captures(&line_string).unwrap();
-
 //             // Parse the line into the relation table
-
-//             process_u_line(line_string.to_owned(), &caps, &mut relation_table);
+//             parse_line(&caps, &mut n_importer, column_names.to_vec(), i);
+//             parse_line(&caps, &mut e_importer, column_names.to_vec(), i);
 //         } else {
 //             continue;
 //         }
 //     }
+// Create the interperter for id to uuid
+//     n_importer.generate_id_map(uuid_map);
+//     // Insert nodes to db
+//     n_importer.insert_to_db(uuid_map);
+//     // Insert edges to db
+//     n_importer.insert_to_db(uuid_map);
 
 //     Ok(true)
 // }
@@ -154,7 +176,7 @@ pub fn import_files(file_info: ImportType) -> Result<(), &'static str> {
     let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
     let e: bool;
     let v: bool;
-
+    let u: bool;
     // Handle the possibility of not setting a node filepath
     match file_info {
         ImportType::Dual(x) => {
@@ -166,28 +188,27 @@ pub fn import_files(file_info: ImportType) -> Result<(), &'static str> {
             // Call separate importers
             v = import_vertex_file(x.file_path[0], &mut uuid_map, x.expression[0]).unwrap();
             e = import_edge_file(x.file_path[1], &uuid_map, x.expression[1]).unwrap();
+            u = false;
         }
         ImportType::Unified(x) => {
+            e = false;
+            v = false;
             // Convert name vector to hashmap
             let mut names: HashMap<&str, &str> = HashMap::with_capacity(x.col_names.len());
             // Handle Unified import
-            v = true; //import_unified(x.file_path, &mut uuid_map, x.expression, names).unwrap();
-            e = v;
+            // u = import_unified(x.file_path, &mut uuid_map, x.expression).unwrap();
+            u = false;
         }
         _ => {
             e = false;
             v = false;
+            u = false;
         }
     }
     // Error Checking
-    if e && v {
+    if (e && v) || u {
         Ok(())
     } else {
         Err("There was an error with one or both of the files")
     }
-}
-
-pub enum PatternFormat<'a> {
-    Dual([&'a str; 2]),
-    Unified([&'a str; 1]),
 }
