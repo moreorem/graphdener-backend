@@ -1,6 +1,6 @@
 // use uuid::Uuid;
 use io::importer::Importer;
-use io::importer::{EdgeImporter, NodeImporter, UnifiedImporter};
+use io::importer::{EdgeImporter, NodeImporter};
 use io::pattern::ImportType;
 use regex::{Captures, Regex};
 use statics;
@@ -26,26 +26,27 @@ fn parse_line<T: Import>(
     importer: &mut T,
     names: Vec<&str>, // This is what differs between single and unified
     line: usize,
+    has_type: bool,
 ) -> () {
-    importer.add_dummy_type("unknown");
-    // PENDING: Make a check to replace obligatory fields with a dummy value
-    // In single file it will receive all of the names
+    //
+    let mut clean_name: &str;
+    if !has_type {
+        if let Importer::NodeImporter = importer.get_importer_type() {
+            importer.add_dummy_type(1, "unknown");
+        } else if let Importer::EdgeImporter = importer.get_importer_type() {
+            importer.add_dummy_type(line as u32, "unknown");
+        }
+    }
     // Iterate over every column
     for name in names.iter() {
-        // handle types
-        // let idx = statics::RECOGNIZED_NAMES
-        //     .iter()
-        //     .position(|&x| x == *name)
-        //     .unwrap();
-        // let typ = statics::RECOGNIZED_TYPES[idx];
-        // let data: ParsedColumn = match typ {
-        //     "str" => ParsedColumn::Text(caps[*name].to_string()),
-        //     "int" => ParsedColumn::Numeric(caps[*name].parse::<u32>().expect("expected digit")),
-        //     "dec" => ParsedColumn::Decimal(caps[*name].parse::<f64>().expect("expected decimal")),
-        //     _ => ParsedColumn::Meta(caps[*name].to_string()),
-        // };
-        // PENDING: Improve conditionals, receive types somehow different
-        let data: ParsedColumn = match *name {
+        // Clean the name if it contains numbers because of duplicates in order to do the match
+        if name[name.len() - 1..].parse::<u8>().is_ok() {
+            clean_name = &name[..name.len() - 1];
+        } else {
+            clean_name = name;
+        }
+
+        let data: ParsedColumn = match clean_name {
             "n_id" | "e_id" | "e_from" | "e_to" | "e_weight" => {
                 ParsedColumn::Numeric(caps[*name].parse::<u32>().expect("n_id is not numeric!"))
             }
@@ -54,7 +55,7 @@ fn parse_line<T: Import>(
             _ => ParsedColumn::Meta(caps[*name].to_string()),
         };
 
-        importer.insert_data(name, data, line);
+        importer.insert_data(clean_name, data, line);
     }
 }
 
@@ -65,22 +66,22 @@ fn import_vertex_file(
 ) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
-    let has_n_type = true;
+    let mut has_n_type = true;
 
     // collect the column names as they get recognized
     let mut column_names: Vec<&str> = re.capture_names().map(|x| x.unwrap_or("")).collect();
     column_names.remove(0);
     // Check if mandatory columns are missing
     if !column_names.iter().any(|&x| x == "n_type") {
-        let has_n_type = false;
+        has_n_type = false;
     }
 
     // Create temporary collection to handle import
-    let mut importer = NodeImporter::new(has_n_type);
+    let mut importer = NodeImporter::new();
 
     // Iterate over every line
     for (i, line) in BufReader::new(file).lines().enumerate() {
-        let line_text = line.unwrap();
+        let line_text = line.unwrap_or("".to_string());
 
         let line_string = String::from(line_text);
         let caps: Captures;
@@ -90,13 +91,12 @@ fn import_vertex_file(
             caps = re.captures(&line_string).unwrap();
 
             // Parse the line into the relation table
-            parse_line(&caps, &mut importer, column_names.to_vec(), i);
+            parse_line(&caps, &mut importer, column_names.to_vec(), i, has_n_type);
         } else {
             continue;
         }
     }
     importer.generate_id_map(uuid_map);
-    println!("{:?}", uuid_map);
     importer.insert_to_db(uuid_map);
     Ok(true)
 }
@@ -104,28 +104,28 @@ fn import_vertex_file(
 fn import_edge_file(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
-    let has_e_type = true;
+    let mut has_e_type = true;
     // collect the column names as they get recognized
     let mut column_names: Vec<&str> = re.capture_names().map(|x| x.unwrap_or("")).collect();
     column_names.remove(0);
 
     // Check if mandatory columns are missing
     if !column_names.iter().any(|&x| x == "e_type") {
-        let has_e_type = false;
+        has_e_type = false;
     }
-
+    println!("{}", has_e_type);
     // Create temporary collection to handle import
-    let mut importer = EdgeImporter::new(has_e_type);
+    let mut importer = EdgeImporter::new();
 
     for (i, line) in BufReader::new(file).lines().enumerate() {
-        let line_text = line.unwrap();
+        let line_text = line.unwrap_or("".to_string());
         let line_string = String::from(line_text);
         let caps: Captures;
 
         // Handle lines that are empty or do not fit in the expression
         if let Some(x) = re.captures(&line_string) {
             caps = re.captures(&line_string).unwrap();
-            parse_line(&caps, &mut importer, column_names.to_vec(), i);
+            parse_line(&caps, &mut importer, column_names.to_vec(), i, has_e_type);
         } else {
             continue;
         }
@@ -134,43 +134,6 @@ fn import_edge_file(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> 
     importer.insert_to_db(uuid_map);
     Ok(true)
 }
-
-// fn import_unified(path: &str, uuid_map: &mut HashMap<u32, Uuid>, format: &str) -> io::Result<bool> {
-//     println!("Unified Import...");
-//     let file = File::open(path).expect("There was a problem reading the vertices file.");
-//     let re = Regex::new(format).unwrap();
-//     println!("Unified {:?}", re);
-//     // collect the column names as they get recognized
-//     let column_names: Vec<&str> = re.capture_names().map(|x| x.unwrap_or("")).collect();
-//     let column_names = &column_names[1..];
-//     // Create temporary collection to handle import
-//     let mut n_importer = NodeImporter::new();
-//     let mut e_importer = EdgeImporter::new();
-
-//     for (i, line) in BufReader::new(file).lines().enumerate() {
-//         let line_text = line.unwrap();
-//         let line_string = String::from(line_text);
-//         let caps: Captures;
-
-//         // Handle lines that are empty or do not fit in the expression
-//         if let Some(x) = re.captures(&line_string) {
-//             caps = re.captures(&line_string).unwrap();
-//             // Parse the line into the relation table
-//             parse_line(&caps, &mut n_importer, column_names.to_vec(), i);
-//             parse_line(&caps, &mut e_importer, column_names.to_vec(), i);
-//         } else {
-//             continue;
-//         }
-//     }
-// Create the interperter for id to uuid
-//     n_importer.generate_id_map(uuid_map);
-//     // Insert nodes to db
-//     n_importer.insert_to_db(uuid_map);
-//     // Insert edges to db
-//     n_importer.insert_to_db(uuid_map);
-
-//     Ok(true)
-// }
 
 pub fn import_files(file_info: ImportType) -> Result<(), &'static str> {
     let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
@@ -195,8 +158,6 @@ pub fn import_files(file_info: ImportType) -> Result<(), &'static str> {
             v = false;
             // Convert name vector to hashmap
             let mut names: HashMap<&str, &str> = HashMap::with_capacity(x.col_names.len());
-            // Handle Unified import
-            // u = import_unified(x.file_path, &mut uuid_map, x.expression).unwrap();
             u = false;
         }
         _ => {

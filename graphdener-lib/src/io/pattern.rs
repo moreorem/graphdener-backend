@@ -82,5 +82,6 @@ fn split_col_names<'a>(
             panic!("Unrecognizable column name");
         }
     }
+
     (n_names, e_names)
 }

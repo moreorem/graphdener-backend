@@ -13,15 +13,7 @@ pub enum Importer {
     UnifiedImporter,
 }
 
-pub struct UnifiedImporter {
-    node_list: Vec<u32>,
-    pub type_list: Vec<(u32, String)>,
-    pub meta_list: Vec<(u32, HashMap<String, String>)>,
-    current_id: u32,
-}
-
 pub struct NodeImporter {
-    has_type: bool,
     node_list: Vec<u32>,
     pub type_list: Vec<(u32, String)>,
     pub meta_list: Vec<(u32, HashMap<String, String>)>,
@@ -30,11 +22,10 @@ pub struct NodeImporter {
 
 // Because there is no edge id usually we create it using line number
 pub struct EdgeImporter {
-    has_type: bool,
     edge_id: Vec<u32>,
     edge_list: Vec<[u32; 2]>,
-    pub type_list: Vec<(u32, String)>,
-    pub meta_list: Vec<(u32, HashMap<String, String>)>,
+    pub type_list: Vec<(usize, String)>,
+    pub meta_list: Vec<(usize, HashMap<String, String>)>,
     temp_fromto: [Option<u32>; 2],
 }
 
@@ -67,7 +58,7 @@ impl Import for EdgeImporter {
             }
             "e_type" => {
                 if let ParsedColumn::Text(x) = data {
-                    self.type_list.push((line as u32, x))
+                    self.type_list.push((line, x))
                 } else {
                     panic!("unknown type type");
                 }
@@ -84,7 +75,7 @@ impl Import for EdgeImporter {
         if !meta.is_empty() {
             let mut meta_map = HashMap::new();
             meta_map.insert(name.to_string(), meta);
-            self.meta_list.push((line as u32, meta_map));
+            self.meta_list.push((line, meta_map));
         }
         // If temporary from-to line is filled empty the contents into the edgelist
         if let [Some(x), Some(y)] = self.temp_fromto {
@@ -93,15 +84,22 @@ impl Import for EdgeImporter {
         }
         // TESTME: debugging
         // let msg = database::get_edge_metadata(None, "e_label".to_string(), None);
-        let msg = database::get_graph_edges(None);
-        println!("{:?}", msg);
+        // let msg = database::get_graph_edges(None);
+        // println!("{:?}", msg);
+    }
+
+    fn add_dummy_type(&mut self, id: u32, typ: &str) {
+        self.type_list.push((id as usize, typ.to_string()));
+    }
+
+    fn get_importer_type(&self) -> Importer {
+        Importer::EdgeImporter
     }
 }
 
 impl EdgeImporter {
-    pub fn new(has_type: bool) -> EdgeImporter {
+    pub fn new() -> EdgeImporter {
         EdgeImporter {
-            has_type,
             edge_id: Vec::new(),
             edge_list: Vec::new(),
             type_list: Vec::new(),
@@ -113,35 +111,37 @@ impl EdgeImporter {
     // Sends the edge data to database
     pub fn insert_to_db(&self, uuid_map: &HashMap<u32, Uuid>) -> () {
         println!("Storing edges to database...");
+        let mut data: Vec<(Uuid, String, Uuid)> = Vec::new();
 
-        // PENDING: fill type_list with something in case there are no values
-        let data: Vec<(Uuid, String, Uuid)> = self
-            .type_list
-            .iter()
-            .map(|(line_number, typ)| {
-                (
-                    *uuid_map
-                        .get(&self.edge_list[*line_number as usize][0]) // FIXME: Out of bounds
-                        .unwrap(),
-                    typ.to_owned(),
-                    *uuid_map
-                        .get(&self.edge_list[*line_number as usize][1])
-                        .unwrap(),
-                )
-            })
-            .collect();
+        for (i, id) in self.edge_list.iter().enumerate() {
+            data.push((
+                *uuid_map.get(&id[0]).unwrap(),
+                self.type_list[i].1.to_owned(),
+                *uuid_map.get(&id[1]).unwrap(),
+            ));
+        }
+        // let data: Vec<(Uuid, String, Uuid)> = self
+        //     .type_list
+        //     .iter()
+        //     .map(|(line_number, typ)| {
+        //         (
+        //             *uuid_map.get(&self.edge_list[*line_number][0]).unwrap(),
+        //             typ.to_owned(),
+        //             *uuid_map.get(&self.edge_list[*line_number][1]).unwrap(),
+        //         )
+        //     })
+        //     .collect();
 
         for triplet in data.into_iter() {
             let (from, t, to) = triplet;
             database::create_edges(from, t, to);
         }
 
-        // let data: Vec<(Uuid, t, Uuid, String, String)> = self.meta_list.iter().map(|(line_number, meta)| )
         // Store the metadata for vertices as well
         for (line_number, meta) in self.meta_list.iter() {
-            let fid = self.edge_list[*line_number as usize][0];
-            let tid = self.edge_list[*line_number as usize][0];
-            let typ = &self.type_list[*line_number as usize].1;
+            let fid = self.edge_list[*line_number][0];
+            let tid = self.edge_list[*line_number][0];
+            let typ = &self.type_list[*line_number].1;
             let fromuid = *uuid_map.get(&fid).unwrap();
             let touid = *uuid_map.get(&tid).unwrap();
 
@@ -157,8 +157,8 @@ impl EdgeImporter {
 
         // TESTME: debugging
         // let msg = database::get_edge_metadata(None, "e_label".to_string(), None);
-        let msg = database::get_graph_edges(None);
-        println!("{:?}", msg);
+        // let msg = database::get_graph_edges(None);
+        // println!("{:?}", msg);
     }
 }
 
@@ -200,12 +200,19 @@ impl Import for NodeImporter {
         }
         self.current_id = *self.node_list.last().unwrap();
     }
+
+    fn add_dummy_type(&mut self, id: u32, typ: &str) {
+        self.type_list.push((self.current_id, typ.to_string()));
+    }
+
+    fn get_importer_type(&self) -> Importer {
+        Importer::NodeImporter
+    }
 }
 
 impl NodeImporter {
-    pub fn new(has_type: bool) -> NodeImporter {
+    pub fn new() -> NodeImporter {
         NodeImporter {
-            has_type,
             node_list: Vec::new(),
             type_list: Vec::new(),
             meta_list: Vec::new(),
@@ -254,99 +261,7 @@ impl NodeImporter {
 
         // TESTME: debugging
         // let msg = database::get_vertex_metadata(None, "n_label");
-        let msg = database::get_graph_vertices(None);
-        println!("{:?}", msg);
+        // let msg = database::get_graph_vertices(None);
+        // println!("{:?}", msg);
     }
 }
-
-// impl Import for UnifiedImporter {
-//     fn insert_data(&mut self, name: &str, data: ParsedColumn, line: usize) {
-//         let mut n_meta = String::from("");
-//         let mut e_meta = String::from("");
-
-//         // TODO: insert match to a function and recognize name from the third char
-//         if name[..2] == *"n_" {
-//             match name {
-//                 "n_id" => {
-//                     if let ParsedColumn::Numeric(x) = data {
-//                         self.node_list.push(x)
-//                     } else {
-//                         panic!("could not parse n_id");
-//                     }
-//                 }
-//                 "n_type" => {
-//                     if let ParsedColumn::Text(x) = data {
-//                         self.type_list.push((self.current_id, x))
-//                     } else {
-//                         panic!("could not parse n_type");
-//                     }
-//                 }
-//                 _ => {
-//                     if let ParsedColumn::Meta(x) = data {
-//                         n_meta = x.to_owned()
-//                     } else {
-//                         panic!("could not parse node meta");
-//                     }
-//                 }
-//             }
-//         }
-//         else if name[..2] == *"e_" {
-//             match name {
-//                 "e_id" => {
-//                 if let ParsedColumn::Numeric(x) = data {
-//                     // Dummy value, we probably wont use e_id because we generate our own
-//                     // self.line_number.push(x)
-//                 } else {
-//                     panic!("unknown id type");
-//                 }
-//             }
-//             "e_from" => {
-//                 if let ParsedColumn::Numeric(x) = data {
-//                     self.temp_fromto[0] = Some(x);
-//                 } else {
-//                     panic!("unknown source type");
-//                 }
-//             }
-//             "e_to" => {
-//                 if let ParsedColumn::Numeric(x) = data {
-//                     self.temp_fromto[1] = Some(x);
-//                 } else {
-//                     panic!("unknown target type");
-//                 }
-//             }
-//             "e_type" => {
-//                 if let ParsedColumn::Text(x) = data {
-//                     self.type_list.push((line as u32, x))
-//                 } else {
-//                     panic!("unknown type type");
-//                 }
-//             }
-//             _ => {
-//                 if let ParsedColumn::Meta(x) = data {
-//                     e_meta = x.to_owned()
-//                 } else {
-//                     panic!("unknown meta type");
-//                 }
-//             }
-//           }
-//         };
-//         // If meta variable has data, pass it to the metadata list
-//         if !n_meta.is_empty() {
-//             let mut meta_map = HashMap::new();
-//             meta_map.insert(name.to_string(), n_meta);
-//             self.meta_list.push((self.current_id, meta_map));
-//         }
-//         self.current_id = *self.node_list.last().unwrap();
-//     }
-// }
-
-// impl UnifiedImporter {
-//     pub fn new() -> UnifiedImporter {
-//         UnifiedImporter {
-//             node_list: Vec<u32>,
-//             type_list: Vec<(u32, String)>,
-//             meta_list: Vec<(u32, HashMap<String, String>)>,
-//             current_id: u32,
-//         }
-//     }
-// }
