@@ -4,7 +4,7 @@ use super::super::io::filehandling;
 use super::super::models::graph::GraphContainer;
 use super::database;
 use super::retrievals::get_pos;
-use io::pattern::ImportType;
+use io::pattern::InitPattern;
 use rand::prelude::*;
 use rmp_rpc::Value;
 
@@ -25,8 +25,7 @@ pub fn import_paths(
     let converted_pattern = patterns.iter().map(|x| x.as_str().unwrap()).collect();
 
     // Store import info to the corresponding struct
-    let import_info =
-        ImportType::create_import(is_single_path, converted_path, converted_pattern, names);
+    let import_info = InitPattern::create_import(converted_path, converted_pattern, names);
     filehandling::import_files(import_info);
 
     Ok(Value::from("paths imported"))

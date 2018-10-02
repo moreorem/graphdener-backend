@@ -1,68 +1,36 @@
-pub enum ImportType<'a> {
-    Dual(DualPattern<'a>),
-    Unified(SinglePattern<'a>),
-}
-
-pub struct DualPattern<'a> {
+pub struct InitPattern<'a> {
     pub file_path: [&'a str; 2],
     pub expression: [&'a str; 2],
     pub n_names: Vec<(&'a str, &'a str)>,
     pub e_names: Vec<(&'a str, &'a str)>,
 }
 
-pub struct SinglePattern<'a> {
-    pub file_path: &'a str,
-    pub expression: &'a str,
-    pub col_names: Vec<(&'a str, &'a str)>,
-}
-
-impl<'a> ImportType<'a> {
+impl<'a> InitPattern<'a> {
     pub fn create_import(
-        is_single_path: bool,
         path: Vec<&'a str>,
         patterns: Vec<&'a str>,
         names: Vec<(&'a str, &'a str)>,
-    ) -> ImportType<'a> {
+    ) -> InitPattern<'a> {
         // Distinguish between single or unified import
-        if is_single_path {
-            ImportType::Unified(SinglePattern::new(path[0], patterns[0], names))
-        } else {
-            ImportType::Dual(DualPattern::new(
-                [path[0], path[1]],
-                [patterns[0], patterns[1]],
-                split_col_names(names),
-            ))
-        }
+        InitPattern::new(
+            [path[0], path[1]],
+            [patterns[0], patterns[1]],
+            split_col_names(names),
+        )
     }
-}
 
-impl<'a> DualPattern<'a> {
     fn new(
         file_path: [&'a str; 2],
         expression: [&'a str; 2],
         col_names: (Vec<(&'a str, &'a str)>, Vec<(&'a str, &'a str)>),
-    ) -> DualPattern<'a> {
+    ) -> InitPattern<'a> {
         let (n_names, e_names) = col_names;
 
-        DualPattern {
+        InitPattern {
             file_path,
             expression,
             n_names,
             e_names,
-        }
-    }
-}
-
-impl<'a> SinglePattern<'a> {
-    fn new(
-        file_path: &'a str,
-        expression: &'a str,
-        col_names: Vec<(&'a str, &'a str)>,
-    ) -> SinglePattern<'a> {
-        SinglePattern {
-            file_path,
-            expression,
-            col_names,
         }
     }
 }

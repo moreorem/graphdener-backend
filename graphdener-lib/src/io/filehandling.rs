@@ -1,7 +1,7 @@
 // use uuid::Uuid;
 use io::importer::Importer;
 use io::importer::{EdgeImporter, NodeImporter};
-use io::pattern::ImportType;
+use io::pattern::InitPattern;
 use regex::{Captures, Regex};
 use statics;
 use std::collections::HashMap;
@@ -30,13 +30,7 @@ fn parse_line<T: Import>(
 ) -> () {
     //
     let mut clean_name: &str;
-    if !has_type {
-        if let Importer::NodeImporter = importer.get_importer_type() {
-            importer.add_dummy_type(1, "unknown");
-        } else if let Importer::EdgeImporter = importer.get_importer_type() {
-            importer.add_dummy_type(line as u32, "unknown");
-        }
-    }
+
     // Iterate over every column
     for name in names.iter() {
         // Clean the name if it contains numbers because of duplicates in order to do the match
@@ -45,6 +39,7 @@ fn parse_line<T: Import>(
         } else {
             clean_name = name;
         }
+        println!("{}", clean_name);
 
         let data: ParsedColumn = match clean_name {
             "n_id" | "e_id" | "e_from" | "e_to" | "e_weight" => {
@@ -56,6 +51,14 @@ fn parse_line<T: Import>(
         };
 
         importer.insert_data(clean_name, data, line);
+    }
+
+    if !has_type {
+        if let Importer::NodeImporter = importer.get_importer_type() {
+            importer.add_dummy_type(1, "unknown");
+        } else if let Importer::EdgeImporter = importer.get_importer_type() {
+            importer.add_dummy_type(line as u32, "unknown");
+        }
     }
 }
 
@@ -101,6 +104,7 @@ fn import_vertex_file(
     Ok(true)
 }
 
+// TODO: Unify import_edge with import_vertex
 fn import_edge_file(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> io::Result<bool> {
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
@@ -135,39 +139,27 @@ fn import_edge_file(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> 
     Ok(true)
 }
 
-pub fn import_files(file_info: ImportType) -> Result<(), &'static str> {
+pub fn import_files(file_info: InitPattern) -> Result<(), &'static str> {
     let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
     let e: bool;
     let v: bool;
-    let u: bool;
-    // Handle the possibility of not setting a node filepath
-    match file_info {
-        ImportType::Dual(x) => {
-            // Convert name vectors to hashmaps
-            let mut n_names: HashMap<&str, &str> = HashMap::with_capacity(x.n_names.len());
-            let mut e_names: HashMap<&str, &str> = HashMap::with_capacity(x.e_names.len());
-            x.n_names.iter().map(|x| n_names.insert(x.0, x.1));
-            x.e_names.iter().map(|x| e_names.insert(x.0, x.1));
-            // Call separate importers
-            v = import_vertex_file(x.file_path[0], &mut uuid_map, x.expression[0]).unwrap();
-            e = import_edge_file(x.file_path[1], &uuid_map, x.expression[1]).unwrap();
-            u = false;
-        }
-        ImportType::Unified(x) => {
-            e = false;
-            v = false;
-            // Convert name vector to hashmap
-            let mut names: HashMap<&str, &str> = HashMap::with_capacity(x.col_names.len());
-            u = false;
-        }
-        _ => {
-            e = false;
-            v = false;
-            u = false;
-        }
-    }
+
+    // Convert name vectors to hashmaps
+    let mut n_names: HashMap<&str, &str> = HashMap::with_capacity(file_info.n_names.len());
+    let mut e_names: HashMap<&str, &str> = HashMap::with_capacity(file_info.e_names.len());
+    file_info.n_names.iter().map(|x| n_names.insert(x.0, x.1));
+    file_info.e_names.iter().map(|x| e_names.insert(x.0, x.1));
+    // Call separate importers
+    v = import_vertex_file(
+        file_info.file_path[0],
+        &mut uuid_map,
+        file_info.expression[0],
+    )
+    .unwrap();
+    e = import_edge_file(file_info.file_path[1], &uuid_map, file_info.expression[1]).unwrap();
+
     // Error Checking
-    if (e && v) || u {
+    if (e && v) {
         Ok(())
     } else {
         Err("There was an error with one or both of the files")

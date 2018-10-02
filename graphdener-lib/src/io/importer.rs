@@ -66,8 +66,6 @@ impl Import for EdgeImporter {
             _ => {
                 if let ParsedColumn::Meta(x) = data {
                     meta = x.to_owned()
-                } else {
-                    panic!("unknown meta type");
                 }
             }
         };
@@ -82,10 +80,6 @@ impl Import for EdgeImporter {
             self.edge_list.push([x, y]);
             self.temp_fromto = [None, None];
         }
-        // TESTME: debugging
-        // let msg = database::get_edge_metadata(None, "e_label".to_string(), None);
-        // let msg = database::get_graph_edges(None);
-        // println!("{:?}", msg);
     }
 
     fn add_dummy_type(&mut self, id: u32, typ: &str) {
@@ -240,12 +234,17 @@ impl NodeImporter {
     // Nodes Step 3
     pub fn insert_to_db(&self, uuid_map: &HashMap<u32, Uuid>) -> () {
         println!("Storing vertices to database...");
+        let mut data: Vec<(Uuid, String)> = Vec::new();
 
-        let data: Vec<(Uuid, String)> = self
-            .type_list
-            .iter()
-            .map(|(x, y)| (*uuid_map.get(&x).unwrap(), y.to_owned()))
-            .collect();
+        for (id, t) in self.type_list.iter() {
+            data.push((*uuid_map.get(id).unwrap(), t.to_owned()));
+        }
+
+        // let data: Vec<(Uuid, String)> = self
+        //     .type_list
+        //     .iter()
+        //     .map(|(x, y)| (*uuid_map.get(&x).unwrap(), y.to_owned()))
+        //     .collect();
 
         for pair in data.into_iter() {
             database::create_vertices(pair);
@@ -258,10 +257,5 @@ impl NodeImporter {
                 database::set_vertex_metadata(Some(uid), (name.to_owned(), value.to_owned()));
             }
         }
-
-        // TESTME: debugging
-        // let msg = database::get_vertex_metadata(None, "n_label");
-        // let msg = database::get_graph_vertices(None);
-        // println!("{:?}", msg);
     }
 }
