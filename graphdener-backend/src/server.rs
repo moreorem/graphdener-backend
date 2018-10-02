@@ -8,14 +8,12 @@ use graphdener::commands::retrievals::{
 use graphdener::models::graph::GraphContainer;
 use rmp_rpc::{Service, Value};
 
-// FIXME: Find a better place for Graph Container initialization
 // Our server type
 #[derive(Clone)]
 pub struct Echo(pub GraphContainer);
 
 // The Service trait defines how the server handles incoming requests and notifications.
 impl Service for Echo {
-    // TODO: Use only one Graph struct and repopulate it every time you change canvas
     // This is the type of future we send back from `handle_request`. Since we have a response
     // available immediately, there's no need to send back a "genuine" future.
     type RequestFuture = Result<Value, Value>;
@@ -56,7 +54,6 @@ impl Service for Echo {
             _ => Err("Invalid method call".into()),
         }
     }
-    // TODO: Create a struct of response that always contains ids along with each info and return this to the frontend
     // Define how the server handle notifications.
     //
     // This server just prints the method in the console.

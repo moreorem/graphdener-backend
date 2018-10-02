@@ -10,29 +10,6 @@ use statics;
 use std::collections::HashMap;
 use uuid::Uuid;
 
-// pub fn get_adj_list() -> Vec<Value>
-//     {
-//         let trans = statics::DATASTORE.transaction().unwrap();
-//         let mut idx_map: HashMap<Uuid, usize> = HashMap::new();
-//         let i = 0;
-//         let v = VertexQuery::All{ start_id: None, limit: LIMIT };
-//         let t = trans.get_vertex_metadata(&v, "pos").unwrap();
-
-//         // Create index map in order to create the adjacency list next
-//         for (i, x) in t.iter().enumerate()
-//         {
-//             idx_map.insert(x.id, i);
-//         }
-//         let draft_edges = trans.get_edges(&VertexQuery::All{start_id: None, limit: LIMIT}
-//                 .outbound_edges(None, None, None, None, LIMIT)).unwrap();
-
-//         draft_edges.iter().map(|x| Value::Array([
-//                                     Value::from(*idx_map.get(&x.key.outbound_id).unwrap()),
-//                                     Value::from(*idx_map.get(&x.key.inbound_id).unwrap())
-//                                     ].to_vec()))
-//                                     .collect()
-//     }
-
 pub fn create_uid_map(vertices: Vec<Vertex>, nodes: &mut Vec<Node>) -> HashMap<Uuid, usize> {
     let count = vertices.len();
     // Map to translate Uuids to Ids
@@ -56,7 +33,6 @@ pub fn find_neighbors(
     let mut surrounding_verts: Vec<Vertex>;
     // Iterate again to find neighbors for every node
     for (uuid, id) in idx_map.iter() {
-        // PENDING: Move error checking to database
         // Find neighbors for current node
         if let Ok(x) = database::get_vertex_neighbors(*uuid) {
             // Ignore absence of neighbors

@@ -70,7 +70,6 @@ impl Graph {
         // }
         let mut id: usize = 1;
 
-        // PENDING: Move error checking to database
         if let Ok(x) = database::get_graph_vertices(None) {
             idx_map = create_uid_map(x, &mut self.nodes);
             find_neighbors(&mut self.nodes, &idx_map);

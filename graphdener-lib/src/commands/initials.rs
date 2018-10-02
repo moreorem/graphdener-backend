@@ -72,6 +72,7 @@ pub fn apply_force_directed(
     Ok(Value::from(id))
 }
 
+// TODO: Improve Randomizer with faster code
 pub fn apply_random_pos(
     id: u64,
     container: &mut GraphContainer,

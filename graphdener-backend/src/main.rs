@@ -17,13 +17,11 @@ use graphdener::models::graph::GraphContainer;
 mod server;
 
 fn main() {
-    // TODO: Add console argument to be used as address
     println!("running server...");
     let addr: SocketAddr = "127.0.0.1:6000".parse().unwrap();
     // Create a tokio event loop.
     let mut core = Core::new().unwrap();
     let handle = core.handle();
-    // let mut container = GraphContainer::default();
 
     // Create a listener to listen for incoming TCP connections.
     let server = TcpListener::bind(&addr, &handle)
