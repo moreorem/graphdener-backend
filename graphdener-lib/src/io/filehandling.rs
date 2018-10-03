@@ -39,7 +39,6 @@ fn parse_line<T: Import>(
         } else {
             clean_name = name;
         }
-        println!("{}", clean_name);
 
         let data: ParsedColumn = match clean_name {
             "n_id" | "e_id" | "e_from" | "e_to" | "e_weight" => {
@@ -117,7 +116,6 @@ fn import_edge_file(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> 
     if !column_names.iter().any(|&x| x == "e_type") {
         has_e_type = false;
     }
-    println!("{}", has_e_type);
     // Create temporary collection to handle import
     let mut importer = EdgeImporter::new();
 

@@ -12,7 +12,6 @@ use rmp_rpc::Value;
 pub fn import_paths(
     path: &Vec<Value>,
     patterns: &Vec<Value>,
-    is_single_path: bool,
     col_names: &Vec<(Value, Value)>,
 ) -> Result<Value, Value> {
     // Convert received rpc values to the corresponding data types
@@ -33,8 +32,6 @@ pub fn import_paths(
 
 // Initializes new graph. Activates when we want to draw an extra graph on a new canvas
 pub fn initialize_graph(container: &mut GraphContainer) -> Result<Value, Value> {
-    let v = database::get_graph_vertices(None).unwrap(); // TESTME: Delete afterwards
-    println!("{:?}", v); // TESTME: Delete afterwards
     let next_id = container.get_next_id();
     container.add_graph(next_id);
     Ok(Value::from(next_id))

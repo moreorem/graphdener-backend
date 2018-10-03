@@ -10,7 +10,6 @@ use uuid::Uuid;
 pub enum Importer {
     NodeImporter,
     EdgeImporter,
-    UnifiedImporter,
 }
 
 pub struct NodeImporter {
@@ -105,32 +104,17 @@ impl EdgeImporter {
     // Sends the edge data to database
     pub fn insert_to_db(&self, uuid_map: &HashMap<u32, Uuid>) -> () {
         println!("Storing edges to database...");
-        let mut data: Vec<(Uuid, String, Uuid)> = Vec::new();
 
         for (i, id) in self.edge_list.iter().enumerate() {
-            data.push((
+            let (from, t, to) = (
                 *uuid_map.get(&id[0]).unwrap(),
                 self.type_list[i].1.to_owned(),
                 *uuid_map.get(&id[1]).unwrap(),
-            ));
-        }
-        // let data: Vec<(Uuid, String, Uuid)> = self
-        //     .type_list
-        //     .iter()
-        //     .map(|(line_number, typ)| {
-        //         (
-        //             *uuid_map.get(&self.edge_list[*line_number][0]).unwrap(),
-        //             typ.to_owned(),
-        //             *uuid_map.get(&self.edge_list[*line_number][1]).unwrap(),
-        //         )
-        //     })
-        //     .collect();
-
-        for triplet in data.into_iter() {
-            let (from, t, to) = triplet;
+            );
             database::create_edges(from, t, to);
         }
 
+        // TODO: Insert metadata concurrently using threads
         // Store the metadata for vertices as well
         for (line_number, meta) in self.meta_list.iter() {
             let fid = self.edge_list[*line_number][0];
@@ -234,22 +218,14 @@ impl NodeImporter {
     // Nodes Step 3
     pub fn insert_to_db(&self, uuid_map: &HashMap<u32, Uuid>) -> () {
         println!("Storing vertices to database...");
-        let mut data: Vec<(Uuid, String)> = Vec::new();
 
+        // PENDING: Combine two following loops into one
         for (id, t) in self.type_list.iter() {
-            data.push((*uuid_map.get(id).unwrap(), t.to_owned()));
+            // data.push((*uuid_map.get(id).unwrap(), t.to_owned()));
+            database::create_vertices((*uuid_map.get(id).unwrap(), t.to_owned()));
         }
 
-        // let data: Vec<(Uuid, String)> = self
-        //     .type_list
-        //     .iter()
-        //     .map(|(x, y)| (*uuid_map.get(&x).unwrap(), y.to_owned()))
-        //     .collect();
-
-        for pair in data.into_iter() {
-            database::create_vertices(pair);
-        }
-
+        // TODO: Insert metadata concurrently using threads
         // Store the metadata for vertices as well
         for (id, meta) in self.meta_list.iter() {
             let uid = *uuid_map.get(&id).unwrap();

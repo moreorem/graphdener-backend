@@ -1,3 +1,6 @@
+use models::graph::Graph;
+use models::nodes::Node;
+
 // fn create_arrowhead(A: [f64;2], B: [f64;2], v1: &mut [f64;2], v2: &mut [f64;2]) -> ()
 // {
 //     let w = 1.;
@@ -35,3 +38,30 @@
 //                                     ].to_vec()))
 //                                     .collect()
 //     }
+
+
+pub fn particle_swarm_optimization(mut graph: &mut Graph) -> () {
+	for i in graph.nodes.iter() { // particle i = 1, ..., S do
+   		Initialize the particle's position with a uniformly distributed random vector: xi ~ U(blo, bup)
+   		Initialize the particle's best known position to its initial position: pi ← xi
+   		if f(pi) < f(g) {
+   			update the swarm's best known  position: g ← pi
+   		}
+   		Initialize the particle's velocity: vi ~ U(-|bup-blo|, |bup-blo|)
+   	}
+	while {//a termination criterion is not met do:
+   		for i in graph.nodes.iter() { //each particle i = 1, ..., S do
+      		for i in range(0..2) { //each dimension d = 1, ..., n do
+         		Pick random numbers: rp, rg ~ U(0,1)
+         		Update the particle's velocity: vi,d ← ω vi,d + φp rp (pi,d-xi,d) + φg rg (gd-xi,d)
+         	}
+      		Update the particle's position: xi ← xi + vi
+      		if f(xi) < f(pi) {
+         		Update the particle's best known position: pi ← xi
+         		if f(pi) < f(g) {
+            		Update the swarm's best known position: g ← pi
+            	}
+            }
+        }
+    }
+}

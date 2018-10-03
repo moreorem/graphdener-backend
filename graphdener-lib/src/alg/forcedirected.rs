@@ -103,6 +103,5 @@ fn update(N: usize, nodes: &mut Vec<Node>, delta_t: f64, graph: &mut Graph) -> (
         let pos = node.pos.get();
         node.pos.set(pos[0] + dx, pos[1] + dy);
         graph.get_mut_node(i).pos.set(pos[0] + dx, pos[1] + dy);
-        println!("AFTER: {:?}", pos);
     }
 }
