@@ -1,6 +1,7 @@
 use models::graph::Graph;
 use models::nodes::Node;
 
+// TODO: Improve speed using arrayfire or threads
 const MAX_DISPLACEMENT_SQUARED: f64 = 24.0;
 
 pub fn force_directed(mut graph: &mut Graph, L: f32, K_r: f32, K_s: f32, delta_t: f32) -> () {
@@ -59,9 +60,7 @@ fn repulsion(N: usize, nodes: &mut Vec<Node>, repulsive_force: f32) -> () {
 fn spring(N: usize, nodes: &mut Vec<Node>, repulsive_force: f32, spring_rest_length: f32) -> () {
     for i1 in 0..N - 1 {
         let mut node1 = &mut nodes[i1].clone();
-        for i2 in node1.neighbors.iter()
-        //0..node1.neighbors.len() - 1
-        {
+        for i2 in node1.neighbors.iter() {
             let mut node2 = &mut nodes[*i2];
             if i1 < *i2 {
                 let pos1 = node1.pos.get();

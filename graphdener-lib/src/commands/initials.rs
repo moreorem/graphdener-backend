@@ -2,8 +2,6 @@ use super::super::alg::circular;
 use super::super::alg::forcedirected;
 use super::super::io::filehandling;
 use super::super::models::graph::GraphContainer;
-use super::database;
-use super::retrievals::get_pos;
 use io::pattern::InitPattern;
 use rand::prelude::*;
 use rmp_rpc::Value;
