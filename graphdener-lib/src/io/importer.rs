@@ -1,9 +1,7 @@
 use super::super::commands::database;
 use super::filehandling::ParsedColumn;
 use graphdenerdb::util;
-use graphdenerdb::{Datastore, EdgeKey, EdgeQuery, Vertex, VertexQuery};
-use statics;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use traits::Import;
 use uuid::Uuid;
 
@@ -21,7 +19,6 @@ pub struct NodeImporter {
 
 // Because there is no edge id usually we create it using line number
 pub struct EdgeImporter {
-    edge_id: Vec<u32>,
     edge_list: Vec<[u32; 2]>,
     pub type_list: Vec<(usize, String)>,
     pub meta_list: Vec<(usize, HashMap<String, String>)>,
@@ -93,7 +90,6 @@ impl Import for EdgeImporter {
 impl EdgeImporter {
     pub fn new() -> EdgeImporter {
         EdgeImporter {
-            edge_id: Vec::new(),
             edge_list: Vec::new(),
             type_list: Vec::new(),
             meta_list: Vec::new(),

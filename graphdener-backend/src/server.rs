@@ -3,7 +3,7 @@ use graphdener::commands::initials::{
     populate_graph,
 };
 use graphdener::commands::retrievals::{
-    get_adjacency, get_edge, get_node_type, get_pos, get_vertex,
+    get_adjacency, get_edge, get_node_type, get_pos, get_stat, get_vertex,
 };
 use graphdener::models::graph::GraphContainer;
 use rmp_rpc::{Service, Value};
@@ -42,7 +42,7 @@ impl Service for Echo {
             "getnpos" => get_pos(params[0].as_u64().expect("expected id"), &self.0),
             "getadj" => get_adjacency(params[0].as_u64().expect("expected id"), &self.0),
             "getntype" => get_node_type(params[0].as_u64().expect("expected id"), &self.0),
-
+            "getstat" => get_stat(),
             _ => Err("Invalid method call".into()),
         }
     }

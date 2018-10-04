@@ -1,10 +1,9 @@
 use models::graph::GraphContainer;
 // use commands::calcs::{get_adj_list};
+use super::database;
 use graphdenerdb::{Datastore, Edge, Transaction, Vertex, VertexQuery};
 use rmp_rpc::Value;
 use statics;
-
-pub struct Retriever;
 
 // TODO: Execute this command concurrently with the algorithm update
 // NEW ORIGIN
@@ -92,8 +91,10 @@ pub fn get_edge(canvas_id: u8, info_type: &str) -> Result<Value, Value> {
             &VertexQuery::All {
                 start_id: None,
                 limit: 1000000,
-            }.outbound_edges(None, None, None, None, 1000000),
-        ).unwrap();
+            }
+            .outbound_edges(None, None, None, None, 1000000),
+        )
+        .unwrap();
     Ok(edge_info(info_type, draft_info))
 }
 
@@ -135,7 +136,8 @@ fn get_e_attribute(kind: &str) -> Vec<Value> {
     let e = &VertexQuery::All {
         start_id: None,
         limit: 100000000,
-    }.outbound_edges(None, None, None, None, 1000000000);
+    }
+    .outbound_edges(None, None, None, None, 1000000000);
     let t = match kind {
         "weight" => trans.get_edge_metadata(&e, "weight").unwrap(),
         "label" => trans.get_edge_metadata(&e, "label").unwrap(),
@@ -143,4 +145,13 @@ fn get_e_attribute(kind: &str) -> Vec<Value> {
     };
 
     t.iter().map(|x| Value::from(x.value.to_string())).collect() // TODO: Find a way to return a float instead of string
+}
+
+pub fn get_stat() -> Result<Value, Value> {
+    let v_count = database::count_vertices();
+    let e_count = database::count_edges();
+    Ok(Value::Array(vec![
+        Value::from(v_count),
+        Value::from(e_count),
+    ]))
 }

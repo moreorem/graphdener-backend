@@ -4,7 +4,8 @@ use models::nodes::Node;
 // TODO: Improve speed using arrayfire or threads
 const MAX_DISPLACEMENT_SQUARED: f64 = 24.0;
 
-pub fn force_directed(mut graph: &mut Graph, L: f32, K_r: f32, K_s: f32, delta_t: f32) -> () {
+// PENDING: Find where K_s is missing
+pub fn force_directed(mut graph: &mut Graph, l: f32, K_r: f32, K_s: f32, delta_t: f32) -> () {
     // L = spring rest length
     // K_r = repulsive force constant
     // K_s = spring constant
@@ -22,7 +23,7 @@ pub fn force_directed(mut graph: &mut Graph, L: f32, K_r: f32, K_s: f32, delta_t
     repulsion(N, &mut nodes, K_r);
 
     // spring force between adjacent pairs
-    spring(N, &mut nodes, K_r, L);
+    spring(N, &mut nodes, K_s, l);
 
     // update positions
     update(N, &mut nodes, delta_t.into(), graph);
@@ -90,13 +91,13 @@ fn update(N: usize, nodes: &mut Vec<Node>, delta_t: f64, graph: &mut Graph) -> (
     for i in 0..N - 1 {
         let mut node = &mut nodes[i];
         let force = node.force.get();
-        let (dx, dy) = (delta_t * force.0 as f64, delta_t * force.1 as f64);
+        let (mut dx, mut dy) = (delta_t * force.0 as f64, delta_t * force.1 as f64);
 
         let displacementSquared = dx * dx + dy * dy;
         if displacementSquared > MAX_DISPLACEMENT_SQUARED.into() {
             let s = (MAX_DISPLACEMENT_SQUARED / displacementSquared).sqrt();
-            let dx = dx * s;
-            let dy = dy * s;
+            dx = dx * s;
+            dy = dy * s;
         }
 
         let pos = node.pos.get();

@@ -1,11 +1,6 @@
-use super::super::alg::forcedirected as fdir;
 use super::database;
-use commands::database::LIMIT;
-use graphdenerdb::{Datastore, Transaction, Vertex, VertexQuery};
-use models::graph;
-use models::graph::GraphContainer;
+use graphdenerdb::Vertex;
 use models::nodes::Node;
-use rmp_rpc::Value;
 use statics;
 use std::collections::HashMap;
 use uuid::Uuid;

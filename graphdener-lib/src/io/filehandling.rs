@@ -3,7 +3,6 @@ use io::importer::Importer;
 use io::importer::{EdgeImporter, NodeImporter};
 use io::pattern::InitPattern;
 use regex::{Captures, Regex};
-use statics;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::{fs::File, io};
@@ -157,7 +156,7 @@ pub fn import_files(file_info: InitPattern) -> Result<(), &'static str> {
     e = import_edge_file(file_info.file_path[1], &uuid_map, file_info.expression[1]).unwrap();
 
     // Error Checking
-    if (e && v) {
+    if e && v {
         Ok(())
     } else {
         Err("There was an error with one or both of the files")

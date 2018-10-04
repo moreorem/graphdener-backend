@@ -1,3 +1,4 @@
+use graphdenerdb::EdgeDirection::Outbound;
 use graphdenerdb::VertexMetadata;
 use graphdenerdb::{
     Datastore, Edge, EdgeDirection, EdgeKey, EdgeQuery, Error, Transaction, Type, Vertex,
@@ -14,7 +15,7 @@ pub fn count() -> u64 {
     trans.get_vertex_count().unwrap()
 }
 
-pub fn get_graph_vertices(start_id: Option<Uuid>) -> Result<Vec<Vertex>, Error> {
+pub fn get_graph_vertices(_start_id: Option<Uuid>) -> Result<Vec<Vertex>, Error> {
     let trans = statics::DATASTORE.transaction().unwrap();
     trans.get_vertices(&VertexQuery::All {
         start_id: None,
@@ -22,7 +23,7 @@ pub fn get_graph_vertices(start_id: Option<Uuid>) -> Result<Vec<Vertex>, Error> 
     })
 }
 
-pub fn get_graph_edges(start_id: Option<Uuid>) -> Result<Vec<Edge>, Error> {
+pub fn get_graph_edges(_start_id: Option<Uuid>) -> Result<Vec<Edge>, Error> {
     let trans = statics::DATASTORE.transaction().unwrap();
     let e = EdgeQuery::Pipe {
         vertex_query: Box::new(VertexQuery::All {
@@ -117,7 +118,6 @@ pub fn set_edge_metadata(from: Uuid, t: String, to: Uuid, data: (String, String)
 
 pub fn get_edge_metadata(uuid: Option<Uuid>, data: String, typ: Option<String>) -> () {
     let trans = statics::DATASTORE.transaction().unwrap();
-    let edgetype: String;
 
     let e = EdgeQuery::Pipe {
         vertex_query: Box::new(VertexQuery::All {
@@ -132,4 +132,18 @@ pub fn get_edge_metadata(uuid: Option<Uuid>, data: String, typ: Option<String>) 
     };
 
     trans.get_edge_metadata(&e, &data);
+}
+
+pub fn count_vertices() -> u64 {
+    let trans = statics::DATASTORE.transaction().unwrap();
+    trans.get_vertex_count().unwrap()
+}
+
+pub fn count_edges() -> u64 {
+    let trans = statics::DATASTORE.transaction().unwrap();
+    let mut e_count: u64 = 0;
+    for vert in get_graph_vertices(None).unwrap() {
+        e_count += trans.get_edge_count(vert.id, None, Outbound).unwrap();
+    }
+    e_count
 }
