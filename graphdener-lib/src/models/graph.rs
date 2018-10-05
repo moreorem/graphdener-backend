@@ -68,7 +68,7 @@ impl Graph {
         // if graph_id == 1 {
         //     let start_id = ...
         // }
-        let mut id: usize = 1;
+        let id: usize = 1;
 
         if let Ok(x) = database::get_graph_vertices(None) {
             idx_map = create_uid_map(x, &mut self.nodes);
@@ -105,13 +105,9 @@ impl Graph {
         list
     }
 
-    pub fn set_positions(&mut self, positions: Vec<(f64, f64)>, node_id: Option<usize>) -> () {
-        if let Some(x) = node_id {
-            self.nodes[x].pos.set(positions[0].0, positions[0].1);
-        } else {
-            for (n, node) in self.nodes.iter_mut().enumerate() {
-                node.pos.set(positions[n].0, positions[n].1);
-            }
+    pub fn set_positions(&mut self, positions: (Vec<f64>, Vec<f64>)) -> () {
+        for (n, node) in self.nodes.iter_mut().enumerate() {
+            node.pos.set(positions.0[n], positions.1[n]);
         }
     }
 

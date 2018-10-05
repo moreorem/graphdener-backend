@@ -42,6 +42,7 @@ use models::nodes::Node;
 
 pub fn particle_swarm_optimization(mut graph: &mut Graph) -> () {
 	for i in graph.nodes.iter() { // particle i = 1, ..., S do
+      
    		Initialize the particle's position with a uniformly distributed random vector: xi ~ U(blo, bup)
    		Initialize the particle's best known position to its initial position: pi ← xi
    		if f(pi) < f(g) {

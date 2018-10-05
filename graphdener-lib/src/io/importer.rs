@@ -140,7 +140,7 @@ impl EdgeImporter {
 impl Import for NodeImporter {
     // To be called for every column in every line
     // Nodes Step 1
-    fn insert_data(&mut self, name: &str, data: ParsedColumn, line: usize) {
+    fn insert_data(&mut self, name: &str, data: ParsedColumn, _line: usize) {
         let mut meta = String::from("");
         // TODO: insert match to a function and recognize name from the third char
         match name {
@@ -175,7 +175,7 @@ impl Import for NodeImporter {
         self.current_id = *self.node_list.last().unwrap();
     }
 
-    fn add_dummy_type(&mut self, id: u32, typ: &str) {
+    fn add_dummy_type(&mut self, _id: u32, typ: &str) {
         self.type_list.push((self.current_id, typ.to_string()));
     }
 

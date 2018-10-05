@@ -31,3 +31,5 @@ rand = "0.5.5"
 rmp-rpc = "0.2.0"
 lazy_static = "^1.0.0"
 serde_json = "1.0.24"
+arrayfire = "3.3.0"
+

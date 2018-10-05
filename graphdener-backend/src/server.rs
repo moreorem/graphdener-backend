@@ -1,10 +1,6 @@
-use graphdener::commands::initials::{
-    apply_circular, apply_force_directed, apply_random_pos, import_paths, initialize_graph,
-    populate_graph,
-};
-use graphdener::commands::retrievals::{
-    get_adjacency, get_edge, get_node_type, get_pos, get_stat, get_vertex,
-};
+use graphdener::commands::distribute::{apply_circular, apply_force_directed, apply_random_pos};
+use graphdener::commands::initials::{import_paths, initialize_graph, populate_graph};
+use graphdener::commands::retrievals::{get_adjacency, get_node_type, get_pos, get_stat};
 use graphdener::models::graph::GraphContainer;
 use rmp_rpc::{Service, Value};
 
@@ -31,7 +27,7 @@ impl Service for Echo {
             "newgraph" => initialize_graph(&mut self.0),
             "populate" => populate_graph(params[0].as_u64().expect("expected id"), &mut self.0),
             "random" => {
-                apply_random_pos(params[0].as_u64().expect("expected id"), &mut self.0, 0.02)
+                apply_random_pos(params[0].as_u64().expect("expected id") as u8, &mut self.0)
             }
             "diralg" => apply_force_directed(
                 params[0].as_u64().expect("expected id"),

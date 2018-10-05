@@ -52,7 +52,7 @@ pub fn get_node_type(graph_id: u64, container: &GraphContainer) -> Result<Value,
 }
 
 // Returns specific info about a set or all of the vertices that exist in the database to the frontend
-pub fn get_vertex(canvas_id: u8, info_type: &str) -> Result<Value, Value> {
+pub fn get_vertex(info_type: &str) -> Result<Value, Value> {
     let trans = statics::DATASTORE.transaction().unwrap();
     let v: VertexQuery;
     v = VertexQuery::All {
@@ -84,7 +84,6 @@ fn vert_info(info_type: &str, draft_model: Vec<Vertex>) -> Value {
 // make a getter only for edge types, weight, direction and fromto
 pub fn get_edge(canvas_id: u8, info_type: &str) -> Result<Value, Value> {
     let trans = statics::DATASTORE.transaction().unwrap();
-    let edge_list_available: bool;
 
     let draft_info = trans
         .get_edges(

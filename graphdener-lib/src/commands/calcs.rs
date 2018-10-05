@@ -1,7 +1,6 @@
 use super::database;
 use graphdenerdb::Vertex;
 use models::nodes::Node;
-use statics;
 use std::collections::HashMap;
 use uuid::Uuid;
 
