@@ -27,7 +27,7 @@ impl Service for Echo {
             "newgraph" => initialize_graph(&mut self.0),
             "populate" => populate_graph(params[0].as_u64().expect("expected id"), &mut self.0),
             "random" => {
-                apply_random_pos(params[0].as_u64().expect("expected id") as u8, &mut self.0)
+                apply_random_pos(params[0].as_u64().expect("expected id") as u8, &mut self.0, params[1].as_u64().expect("expected integer"))
             }
             "diralg" => apply_force_directed(
                 params[0].as_u64().expect("expected id"),

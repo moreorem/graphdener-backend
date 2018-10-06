@@ -1,13 +1,12 @@
-use alg::random::af::RandomEngineType::PHILOX_4X32_10;
+use af::RandomEngineType::PHILOX_4X32_10;
 use models::graph::Graph;
 use rand::prelude::*;
-extern crate arrayfire as af;
-use self::af::Dim4;
-use self::af::RandomEngine;
-use self::af::{randn, randu};
+use af::Dim4;
+use af::RandomEngine;
+use af::{randn, randu, Array};
 
 // TODO: Improve Randomizer with faster code
-pub fn random_pos(graph: &mut Graph, min_distance: f64) -> &str {
+pub fn random_pos(graph: &mut Graph, min_distance: f64, spread_factor: u8) -> &str {
     fn distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
         ((p1.0 - p2.0).powf(2.) + (p1.1 - p2.1).powf(2.)).sqrt()
     }
@@ -21,11 +20,12 @@ pub fn random_pos(graph: &mut Graph, min_distance: f64) -> &str {
     let mut posy: Vec<f64> = Vec::new();
 
     // TODO: Make only one array of nx2
-    let multiplier: af::Array<f64> = randn::<f64>(Dim4::new(&[1, n as u64, 1, 1])) * 50; //af::Array::new(&[1.002], Dim4::new(&[1, n as u64, 1, 1]));
+    let l = n as f64;
+    let multiplier: Array<f64> = randu::<f64>(Dim4::new(&[1, n as u64, 1, 1])) * l.ln(); //af::Array::new(&[1.002], Dim4::new(&[1, n as u64, 1, 1]));
 
-    let positionx: af::Array<f64> = randu::<f64>(Dim4::new(&[1, n as u64, 1, 1])) * &multiplier; //af::Array::new(&[1.002], Dim4::new(&[1, n as u64, 1, 1]));
-    let positiony: af::Array<f64> = randu::<f64>(Dim4::new(&[1, n as u64, 1, 1])) * &multiplier;
-    // * af::Array::new(&[1.002], Dim4::new(&[1, n as u64, 1, 1]));?
+    let positionx: Array<f64> = randn::<f64>(Dim4::new(&[1, n as u64, 1, 1])) * l.ln() * spread_factor;//&multiplier; //af::Array::new(&[1.002], Dim4::new(&[1, n as u64, 1, 1]));
+    let positiony: Array<f64> = randn::<f64>(Dim4::new(&[1, n as u64, 1, 1])) * l.ln() * spread_factor;//&multiplier;
+    // * af::Array::new(&[1.002], Dim4::new(&[1, n as u64, 1, 1]));
 
     posx.resize(positionx.elements(), 0.0);
     posy.resize(positiony.elements(), 0.0);

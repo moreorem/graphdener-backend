@@ -3,6 +3,8 @@ extern crate rand;
 extern crate regex;
 extern crate rmp_rpc;
 extern crate uuid;
+extern crate arrayfire as af;
+
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]

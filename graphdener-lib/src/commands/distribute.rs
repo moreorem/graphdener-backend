@@ -28,9 +28,9 @@ pub fn apply_force_directed(
     Ok(Value::from(id))
 }
 
-pub fn apply_random_pos(id: u8, container: &mut GraphContainer) -> Result<Value, Value> {
+pub fn apply_random_pos(id: u8, container: &mut GraphContainer, spread_factor: u64) -> Result<Value, Value> {
     let g = container.get_mut_graph(id);
 
     let min_distance = 0.002;
-    Ok(Value::from(random::random_pos(g, min_distance)))
+    Ok(Value::from(random::random_pos(g, min_distance, spread_factor as u8)))
 }
