@@ -105,9 +105,14 @@ impl Graph {
         list
     }
 
-    pub fn set_positions(&mut self, positions: (Vec<f64>, Vec<f64>)) -> () {
+    pub fn set_positions(&mut self, positions: Vec<(f64, f64)>) -> () {
+        // self.nodes
+        //     .iter_mut()
+        //     .enumerate()
+        //     .map(|(n, node)| node.pos.set(positions[n].0, positions[n].1));
+        // println!("{:?}", self.nodes.iter().map(|n| n.pos));
         for (n, node) in self.nodes.iter_mut().enumerate() {
-            node.pos.set(positions.0[n], positions.1[n]);
+            node.pos.set(positions[n].0, positions[n].1);
         }
     }
 

@@ -7,7 +7,7 @@ pub fn apply_circular(id: u64, container: &mut GraphContainer) -> Result<Value, 
     let id: u8 = id as u8;
     let n = container.get_graph(id).unwrap().count();
     let positions = circular::polygon(n as u32);
-    // container.get_mut_graph(id).set_positions(positions);
+    container.get_mut_graph(id).set_positions(positions);
 
     Ok(Value::from(id))
 }
@@ -28,9 +28,17 @@ pub fn apply_force_directed(
     Ok(Value::from(id))
 }
 
-pub fn apply_random_pos(id: u8, container: &mut GraphContainer, spread_factor: u64) -> Result<Value, Value> {
+pub fn apply_random_pos(
+    id: u8,
+    container: &mut GraphContainer,
+    spread_factor: u64,
+) -> Result<Value, Value> {
     let g = container.get_mut_graph(id);
 
     let min_distance = 0.002;
-    Ok(Value::from(random::random_pos(g, min_distance, spread_factor as u8)))
+    Ok(Value::from(random::random_pos(
+        g,
+        min_distance,
+        spread_factor as u8,
+    )))
 }

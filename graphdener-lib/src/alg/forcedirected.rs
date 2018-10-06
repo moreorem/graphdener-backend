@@ -10,14 +10,13 @@ pub fn force_directed(graph: &mut Graph, l: f32, k_r: f32, k_s: f32, delta_t: f3
     // K_r = repulsive force constant
     // K_s = spring constant
     // delta_t = time step
-    // let mut nodes = &mut graph.nodes;
     let mut nodes = graph.nodes.clone();
     let n = nodes.len();
     // initialize net forces
-    println!("initializing net forces");
-    for i in 0..n - 1 {
-        nodes[i].force.set(0.0, 0.0);
-    }
+    // println!("initializing net forces");
+    // for i in 0..n - 1 {
+    //     nodes[i].force.set(0.0, 0.0);
+    // }
 
     // repulsion between all pairs
     repulsion(n, &mut nodes, k_r);
@@ -44,12 +43,16 @@ fn repulsion(n: usize, nodes: &mut Vec<Node>, repulsive_force: f32) -> () {
             if dx != 0.0 || dy != 0.0 {
                 let distanceSquared = dx * dx + dy * dy;
                 let distance = distanceSquared.sqrt();
+                println!("{}", distance);
+
                 let force = repulsive_force as f64 / distanceSquared;
                 let fx = force * dx / distance;
                 let fy = force * dy / distance;
+                println!("force: {}", force);
 
                 let force1 = node1.force.get();
                 let force2 = node2.force.get();
+                println!("force1: {:?}", force1);
 
                 node1.force.set(force1.0 - fx as f32, force1.1 - fy as f32);
                 node2.force.set(force2.0 + fx as f32, force2.1 + fy as f32);
@@ -91,6 +94,7 @@ fn update(n: usize, nodes: &mut Vec<Node>, delta_t: f64, graph: &mut Graph) -> (
     for i in 0..n - 1 {
         let mut node = &mut nodes[i];
         let force = node.force.get();
+        println!("finalforce: {:?}", force);
         let (mut dx, mut dy) = (delta_t * force.0 as f64, delta_t * force.1 as f64);
 
         let displacement_squared = dx * dx + dy * dy;

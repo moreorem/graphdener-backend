@@ -39,3 +39,8 @@ pub fn populate_graph(id: u64, container: &mut GraphContainer) -> Result<Value, 
     container.get_mut_graph(id).populate();
     Ok(Value::from(id))
 }
+
+// PENDING: Implement killgraph
+pub fn kill_graph(id: u64, container: &mut GraphContainer) -> Result<Value, Value> {
+    Ok(Value::from("ok"))
+}
