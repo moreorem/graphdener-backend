@@ -119,4 +119,31 @@ impl Graph {
     pub fn count(&self) -> usize {
         self.nodes.len()
     }
+
+//     pub fn find_neighbors(
+//     nodes: &mut Vec<Node>,
+//     idx_map: &HashMap<Uuid, usize>,
+// ) -> Result<bool, &'static str> {
+//     let mut surrounding_verts: Vec<Vertex>;
+//     // Iterate again to find neighbors for every node
+//     for (uuid, id) in idx_map.iter() {
+//         // Find neighbors for current node
+//         if let Ok(x) = database::get_vertex_neighbors(*uuid) {
+//             // Ignore absence of neighbors
+//             if x.len() == 0 {
+//                 continue;
+//             }
+//             surrounding_verts = x;
+//         } else {
+//             return Err("problem getting neighbors");
+//         }
+
+//         let neighbors: Vec<usize> = surrounding_verts
+//             .iter()
+//             .map(|x| *idx_map.get(&x.id).unwrap())
+//             .collect();
+//         nodes[*id].neighbors = neighbors;
+//     }
+//     Ok(true)
+// }
 }

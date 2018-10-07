@@ -1,15 +1,16 @@
 use graphdenerdb::{Datastore, Transaction, Vertex, VertexQuery};
 use statics;
 use std::f64::consts::PI;
+use models::graph::Graph;
+use models::nodes::Node;
 
 fn angle(p: (f64, f64), N: u32) -> (f64, f64) {
     (p.0 * 2.0 * PI / f64::from(N), p.1 * 2.0 * PI / f64::from(N))
 }
 
 // compute average position of neighbors
-// pub fn barycenter_heuristic(node_list: Vec<Vertex>) -> () {
-//     let trans = statics::DATASTORE.transaction().unwrap();
-//     let pos: (f64, f64) = (0., 0.);
+// pub fn barycenter_heuristic(node_list: Vec<Node>) -> () {
+//     let pos: [f64; 2] = [0., 0.];
 
 //     for node in node_list.iter() {
 //         let v = VertexQuery::Vertices { ids: vec![node.id] };
