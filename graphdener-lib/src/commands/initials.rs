@@ -40,7 +40,12 @@ pub fn populate_graph(id: u64, container: &mut GraphContainer) -> Result<Value, 
     Ok(Value::from(id))
 }
 
-// PENDING: Implement killgraph
 pub fn kill_graph(id: u64, container: &mut GraphContainer) -> Result<Value, Value> {
-    Ok(Value::from("ok"))
+    if let Ok(x) = container.remove_graph(id as u8){
+        Ok(Value::from(id))
+
+    }
+    else {
+        Err(Value::from("Could not delete this graph"))
+    }
 }
