@@ -29,9 +29,8 @@ pub fn import_paths(
 
 // Initializes new graph. Activates when we want to draw an extra graph on a new canvas
 pub fn initialize_graph(container: &mut GraphContainer) -> Result<Value, Value> {
-    let next_id = container.get_next_id();
-    container.add_graph(next_id);
-    Ok(Value::from(next_id))
+    let id = container.add_graph();
+    Ok(Value::from(id))
 }
 
 pub fn populate_graph(id: u64, container: &mut GraphContainer) -> Result<Value, Value> {
@@ -41,11 +40,9 @@ pub fn populate_graph(id: u64, container: &mut GraphContainer) -> Result<Value, 
 }
 
 pub fn kill_graph(id: u64, container: &mut GraphContainer) -> Result<Value, Value> {
-    if let Ok(x) = container.remove_graph(id as u8){
+    if let Ok(x) = container.remove_graph(id as u8) {
         Ok(Value::from(id))
-
-    }
-    else {
+    } else {
         Err(Value::from("Could not delete this graph"))
     }
 }
