@@ -45,10 +45,10 @@ pub fn get_node_type(graph_id: u64, container: &GraphContainer) -> Result<Value,
 
     let typelist: Vec<Value> = types
         .iter()
-        .map(|ab| Value::Array(vec![(ab.as_str().into())]))
+        .map(|ab| Value::from(ab.as_str()))
         .collect();
 
-    Ok(Value::from(typelist))
+    Ok(Value::Array(typelist))
 }
 
 // Returns specific info about a set or all of the vertices that exist in the database to the frontend
