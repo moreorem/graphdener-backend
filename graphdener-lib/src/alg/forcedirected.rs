@@ -61,9 +61,9 @@ fn spring(nodes: &mut Vec<Node>, spring_constant: f32, spring_rest_length: f32) 
     let mut distance: f32;
 
     for i1 in 0..n - 1 {
-        node1 = nodes[i1].clone();
-        for i2 in node1.neighbors.iter() {
-            node2 = nodes[*i2].clone();
+        // node1 = nodes[i1].clone();
+        for i2 in nodes[i1].clone().neighbors.iter() {
+            // node2 = nodes[*i2].clone();
             if i1 < *i2 {
                 pos1 = nodes[i1].pos.get();
                 pos2 = nodes[*i2].pos.get();
@@ -76,8 +76,8 @@ fn spring(nodes: &mut Vec<Node>, spring_constant: f32, spring_rest_length: f32) 
                     let fx = force * dx / distance;
                     let fy = force * dy / distance;
 
-                    let force1 = node1.force.get();
-                    let force2 = node2.force.get();
+                    let force1 = nodes[i1].force.get();
+                    let force2 = nodes[*i2].force.get();
 
                     nodes[i1].force.set(force1.0 + fx, force1.1 + fy);
                     nodes[*i2].force.set(force2.0 - fx, force2.1 - fy);

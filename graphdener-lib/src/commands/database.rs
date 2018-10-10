@@ -1,6 +1,6 @@
-use graphdenerdb::EdgeDirection::Outbound;
-use graphdenerdb::VertexMetadata;
-use graphdenerdb::{
+use indradb::EdgeDirection::Outbound;
+use indradb::VertexMetadata;
+use indradb::{
     Datastore, Edge, EdgeDirection, EdgeKey, EdgeQuery, Error, Transaction, Type, Vertex,
     VertexQuery,
 };
@@ -43,7 +43,7 @@ pub fn get_vertex_neighbors(uuid: Uuid) -> Result<Vec<Vertex>, Error> {
     let trans = statics::DATASTORE.transaction().unwrap();
     trans.get_vertices(
         &VertexQuery::Vertices { ids: vec![uuid] }
-            .outbound_edges(None, None, None, None, EDGE_LIMIT)
+            .outbound_edges(None, None, None, EDGE_LIMIT)
             .inbound_vertices(EDGE_LIMIT),
     )
 }

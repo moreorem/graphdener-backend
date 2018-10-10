@@ -1,7 +1,7 @@
 use models::graph::GraphContainer;
 // use commands::calcs::{get_adj_list};
 use super::database;
-use graphdenerdb::{Datastore, Edge, Transaction, Vertex, VertexQuery};
+use indradb::{Datastore, Edge, Transaction, Vertex, VertexQuery};
 use rmp_rpc::Value;
 use statics;
 
@@ -86,7 +86,7 @@ pub fn get_edge(canvas_id: u8, info_type: &str) -> Result<Value, Value> {
                 start_id: None,
                 limit: 1000000,
             }
-            .outbound_edges(None, None, None, None, 1000000),
+            .outbound_edges(None, None, None, 1000000),
         )
         .unwrap();
     Ok(edge_info(info_type, draft_info))
@@ -131,7 +131,7 @@ fn get_e_attribute(kind: &str) -> Vec<Value> {
         start_id: None,
         limit: 100000000,
     }
-    .outbound_edges(None, None, None, None, 1000000000);
+    .outbound_edges(None, None, None, 1000000000);
     let t = match kind {
         "weight" => trans.get_edge_metadata(&e, "weight").unwrap(),
         "label" => trans.get_edge_metadata(&e, "label").unwrap(),

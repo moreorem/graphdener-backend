@@ -1,5 +1,5 @@
 // use uuid::Uuid;
-use graphdenerdb::MemoryDatastore;
+use indradb::MemoryDatastore;
 
 lazy_static! {
     /// The underlying datastore

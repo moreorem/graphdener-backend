@@ -1,6 +1,6 @@
 use super::super::commands::database;
 use super::filehandling::ParsedColumn;
-use graphdenerdb::util;
+use indradb::util;
 use std::collections::HashMap;
 use traits::Import;
 use uuid::Uuid;

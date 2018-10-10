@@ -1,7 +1,7 @@
 // server.rs externs
 extern crate futures;
 extern crate graphdener;
-extern crate graphdenerdb;
+extern crate indradb;
 extern crate rmp_rpc;
 extern crate tokio_core;
 

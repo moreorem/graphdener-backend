@@ -10,11 +10,10 @@ use uuid::Uuid;
 pub struct Vertex {
     /// The id of the vertex.
     pub id: Uuid,
-    // TODO: Create a label field somehow
+
     /// The type of the vertex.
     #[serde(rename = "type")]
     pub t: Type,
-
 }
 
 impl Vertex {
@@ -37,12 +36,8 @@ impl Vertex {
     /// * `id` - The id of the vertex.
     /// * `t` - The type of the vertex.
     pub fn with_id(id: Uuid, t: Type) -> Self {
-        Vertex { 
-                id: id,
-                t: t,
-            }
+        Vertex { id, t }
     }
-
 }
 
 impl PartialEq for Vertex {
@@ -52,9 +47,3 @@ impl PartialEq for Vertex {
 }
 
 impl Eq for Vertex {}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-struct Position {
-    x: f64,
-    y: f64
-}

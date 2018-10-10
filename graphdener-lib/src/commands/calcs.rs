@@ -1,5 +1,5 @@
 use super::database;
-use graphdenerdb::Vertex;
+use indradb::Vertex;
 use models::nodes::Node;
 use std::collections::HashMap;
 use uuid::Uuid;
