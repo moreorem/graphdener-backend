@@ -1,8 +1,7 @@
-use graphdenerdb::{Datastore, Transaction, Vertex, VertexQuery};
-use statics;
-use std::f64::consts::PI;
 use models::graph::Graph;
 use models::nodes::Node;
+use statics;
+use std::f64::consts::PI;
 
 fn angle(p: (f64, f64), N: u32) -> (f64, f64) {
     (p.0 * 2.0 * PI / f64::from(N), p.1 * 2.0 * PI / f64::from(N))

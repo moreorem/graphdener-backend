@@ -65,11 +65,6 @@ impl Graph {
     pub fn populate(&mut self) {
         let count = database::count();
         let idx_map: HashMap<Uuid, usize>;
-
-        // TODO: Set the start_id according to the last of previous graph
-        // if graph_id == 1 {
-        //     let start_id = ...
-        // }
         let id: usize = 1;
 
         if let Ok(x) = database::get_graph_vertices(None) {
@@ -86,6 +81,10 @@ impl Graph {
 
     pub fn get_mut_node(&mut self, id: usize) -> &mut Node {
         &mut self.nodes[id]
+    }
+
+    pub fn get_all_nodes(&self) -> &Vec<Node> {
+        &self.nodes
     }
 
     pub fn get_types(&self) -> Vec<String> {
@@ -108,11 +107,6 @@ impl Graph {
     }
 
     pub fn set_positions(&mut self, positions: Vec<(f64, f64)>) -> () {
-        // self.nodes
-        //     .iter_mut()
-        //     .enumerate()
-        //     .map(|(n, node)| node.pos.set(positions[n].0, positions[n].1));
-        // println!("{:?}", self.nodes.iter().map(|n| n.pos));
         for (n, node) in self.nodes.iter_mut().enumerate() {
             node.pos.set(positions[n].0, positions[n].1);
         }

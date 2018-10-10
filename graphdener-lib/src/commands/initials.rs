@@ -2,27 +2,20 @@ use super::super::alg::circular;
 use super::super::alg::forcedirected;
 use super::super::io::filehandling;
 use super::super::models::graph::GraphContainer;
-use io::pattern::InitPattern;
 use rmp_rpc::Value;
 
 // Improved import function to accept an array of paths
 pub fn import_paths(
     path: &Vec<Value>,
     patterns: &Vec<Value>,
-    col_names: &Vec<(Value, Value)>,
+    // col_names: &Vec<(Value, Value)>,
 ) -> Result<Value, Value> {
-    // Convert received rpc values to the corresponding data types
-    let mut names: Vec<(&str, &str)> = Vec::with_capacity(col_names.len());
-    for pair in col_names.iter() {
-        names.push((pair.0.as_str().unwrap(), pair.1.as_str().unwrap()));
-    }
+    // Convert path and pattern to their respective types
+    let converted_path = [path[0].as_str().unwrap(), path[1].as_str().unwrap()];
+    let converted_pattern = [patterns[0].as_str().unwrap(), patterns[1].as_str().unwrap()];
 
-    let converted_path = path.iter().map(|x| x.as_str().unwrap()).collect();
-    let converted_pattern = patterns.iter().map(|x| x.as_str().unwrap()).collect();
-
-    // Store import info to the corresponding struct
-    let import_info = InitPattern::create_import(converted_path, converted_pattern, names);
-    filehandling::import_files(import_info);
+    // Send information to filehandling
+    filehandling::import_files(converted_path, converted_pattern);
 
     Ok(Value::from("paths imported"))
 }

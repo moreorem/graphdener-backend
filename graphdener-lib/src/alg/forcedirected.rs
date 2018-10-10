@@ -2,87 +2,85 @@ use models::graph::Graph;
 use models::nodes::Node;
 
 // TODO: Improve speed using arrayfire or threads
-const MAX_DISPLACEMENT_SQUARED: f64 = 24.0;
+const MAX_DISPLACEMENT_SQUARED: f32 = 56.0;
+// L = spring rest length
+// K_r = repulsive force constant
+// K_s = spring constant
+// delta_t = time step
 
-// PENDING: Find where K_s is missing
-pub fn force_directed(graph: &mut Graph, l: f32, k_r: f32, k_s: f32, delta_t: f32) -> () {
-    // L = spring rest length
-    // K_r = repulsive force constant
-    // K_s = spring constant
-    // delta_t = time step
+pub fn force_directed(graph: &mut Graph, l: f32, k_r: f32, k_s: f32, deltat: f32) -> () {
     let mut nodes = graph.nodes.clone();
-    let n = nodes.len();
-    // initialize net forces
-    // println!("initializing net forces");
-    // for i in 0..n - 1 {
-    //     nodes[i].force.set(0.0, 0.0);
-    // }
 
     // repulsion between all pairs
-    repulsion(n, &mut nodes, k_r);
-
+    repulsion(&mut nodes, k_r);
     // spring force between adjacent pairs
-    spring(n, &mut nodes, k_s, l);
+    spring(&mut nodes, k_s, l);
 
     // update positions
-    update(n, &mut nodes, delta_t.into(), graph);
+    update(&mut nodes, deltat, graph);
     println!("Done applying force directed algorithm.");
 }
 
-fn repulsion(n: usize, nodes: &mut Vec<Node>, repulsive_force: f32) -> () {
+fn repulsion(mut nodes: &mut Vec<Node>, repulsive_force: f32) -> () {
+    let n = nodes.len();
     // repulsion between all pairs
     for i1 in 0..n - 2 {
-        let mut node1 = nodes[i1].clone();
+        // let mut node1 = &mut nodes[i1];
         for i2 in i1 + 1..n - 1 {
-            let mut node2 = nodes[i2].clone();
+            // let mut node2 = &mut nodes[i2];
 
-            let pos1 = node1.pos.get();
-            let pos2 = node2.pos.get();
+            let pos1 = nodes[i1].pos.get();
+            let pos2 = nodes[i2].pos.get();
 
-            let (dx, dy) = (pos2[0] - pos1[0], pos2[1] - pos1[1]); //node2.pos.x - node1.pos.x;
+            let (dx, dy) = ((pos2[0] - pos1[0]) as f32, (pos2[1] - pos1[1]) as f32);
             if dx != 0.0 || dy != 0.0 {
-                let distanceSquared = dx * dx + dy * dy;
+                let distanceSquared = dx.powf(2.0) + dy.powf(2.0);
                 let distance = distanceSquared.sqrt();
-                println!("{}", distance);
 
-                let force = repulsive_force as f64 / distanceSquared;
+                let force = repulsive_force / distanceSquared;
                 let fx = force * dx / distance;
                 let fy = force * dy / distance;
-                println!("force: {}", force);
 
-                let force1 = node1.force.get();
-                let force2 = node2.force.get();
-                println!("force1: {:?}", force1);
+                let force1 = nodes[i1].force.get();
+                let force2 = nodes[i2].force.get();
 
-                node1.force.set(force1.0 - fx as f32, force1.1 - fy as f32);
-                node2.force.set(force2.0 + fx as f32, force2.1 + fy as f32);
+                nodes[i1].force.set(force1.0 - fx, force1.1 - fy);
+                nodes[i2].force.set(force2.0 + fx, force2.1 + fy);
             }
         }
     }
 }
 
-fn spring(n: usize, nodes: &mut Vec<Node>, repulsive_force: f32, spring_rest_length: f32) -> () {
-    for i1 in 0..n - 1 {
-        let mut node1 = &mut nodes[i1].clone();
-        for i2 in node1.neighbors.iter() {
-            let mut node2 = &mut nodes[*i2];
-            if i1 < *i2 {
-                let pos1 = node1.pos.get();
-                let pos2 = node2.pos.get();
+// Spring force between adjactent pairs
+fn spring(nodes: &mut Vec<Node>, spring_constant: f32, spring_rest_length: f32) -> () {
+    let n = nodes.len();
+    let mut node1: Node;
+    let mut node2: Node;
+    let mut pos1: [f64; 2];
+    let mut pos2: [f64; 2];
+    let mut distance: f32;
 
-                let (dx, dy) = (pos2[0] - pos1[0], pos2[1] - pos1[1]);
+    for i1 in 0..n - 1 {
+        node1 = nodes[i1].clone();
+        for i2 in node1.neighbors.iter() {
+            node2 = nodes[*i2].clone();
+            if i1 < *i2 {
+                pos1 = nodes[i1].pos.get();
+                pos2 = nodes[*i2].pos.get();
+
+                let (dx, dy) = ((pos2[0] - pos1[0]) as f32, (pos2[1] - pos1[1]) as f32);
 
                 if dx != 0.0 || dy != 0.0 {
-                    let distance = (dx * dx + dy * dy).sqrt();
-                    let force = repulsive_force as f64 * (distance - spring_rest_length as f64);
+                    distance = (dx.powf(2.0) + dy.powf(2.0)).sqrt();
+                    let force = spring_constant * (distance - spring_rest_length);
                     let fx = force * dx / distance;
                     let fy = force * dy / distance;
 
                     let force1 = node1.force.get();
                     let force2 = node2.force.get();
 
-                    node1.force.set(force1.0 + fx as f32, force1.1 + fy as f32);
-                    node2.force.set(force2.0 - fx as f32, force2.1 - fy as f32);
+                    nodes[i1].force.set(force1.0 + fx, force1.1 + fy);
+                    nodes[*i2].force.set(force2.0 - fx, force2.1 - fy);
                 }
             }
         }
@@ -90,14 +88,14 @@ fn spring(n: usize, nodes: &mut Vec<Node>, repulsive_force: f32, spring_rest_len
 }
 
 // Update positions
-fn update(n: usize, nodes: &mut Vec<Node>, delta_t: f64, graph: &mut Graph) -> () {
+fn update(nodes: &mut Vec<Node>, deltat: f32, graph: &mut Graph) -> () {
+    let n = nodes.len();
     for i in 0..n - 1 {
         let mut node = &mut nodes[i];
         let force = node.force.get();
-        println!("finalforce: {:?}", force);
-        let (mut dx, mut dy) = (delta_t * force.0 as f64, delta_t * force.1 as f64);
+        let (mut dx, mut dy) = (deltat * force.0, deltat * force.1);
 
-        let displacement_squared = dx * dx + dy * dy;
+        let displacement_squared = dx.powf(2.0) + dy.powf(2.0);
         if displacement_squared > MAX_DISPLACEMENT_SQUARED.into() {
             let s = (MAX_DISPLACEMENT_SQUARED / displacement_squared).sqrt();
             dx = dx * s;
@@ -105,7 +103,10 @@ fn update(n: usize, nodes: &mut Vec<Node>, delta_t: f64, graph: &mut Graph) -> (
         }
 
         let pos = node.pos.get();
-        node.pos.set(pos[0] + dx, pos[1] + dy);
-        graph.get_mut_node(i).pos.set(pos[0] + dx, pos[1] + dy);
+        node.pos.set(pos[0] + dx as f64, pos[1] + dy as f64);
+        graph
+            .get_mut_node(i)
+            .pos
+            .set(node.pos.get()[0], node.pos.get()[1]);
     }
 }

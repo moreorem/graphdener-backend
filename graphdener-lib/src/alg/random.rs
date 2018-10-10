@@ -1,6 +1,4 @@
 use af::Dim4;
-use af::RandomEngine;
-use af::RandomEngineType::PHILOX_4X32_10;
 use af::{randn, randu, Array};
 use models::graph::Graph;
 

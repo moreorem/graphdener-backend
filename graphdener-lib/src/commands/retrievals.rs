@@ -9,7 +9,6 @@ use statics;
 // NEW ORIGIN
 pub fn get_pos(graph_id: u64, container: &GraphContainer) -> Result<Value, Value> {
     let id = graph_id as u8;
-    println!("{}", id);
     // Get positions from Graph struct with specific id
     let graph = container.get_graph(id).expect("Err");
     let positions = graph.get_positions();
@@ -43,10 +42,7 @@ pub fn get_node_type(graph_id: u64, container: &GraphContainer) -> Result<Value,
     let graph = container.get_graph(id).expect("Err");
     let types = graph.get_types();
 
-    let typelist: Vec<Value> = types
-        .iter()
-        .map(|ab| Value::from(ab.as_str()))
-        .collect();
+    let typelist: Vec<Value> = types.iter().map(|ab| Value::from(ab.as_str())).collect();
 
     Ok(Value::Array(typelist))
 }
@@ -62,7 +58,6 @@ pub fn get_vertex(info_type: &str) -> Result<Value, Value> {
 
     // In this case the msg variable is of type model::Vertex. It has to be broken into the struct items to be used
     let draft_info = trans.get_vertices(&v).unwrap();
-    println!("asked about {}", &info_type);
     Ok(vert_info(info_type, draft_info))
 }
 

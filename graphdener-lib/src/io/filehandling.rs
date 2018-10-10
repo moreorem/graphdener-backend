@@ -1,7 +1,6 @@
 // use uuid::Uuid;
 use io::importer::Importer;
 use io::importer::{EdgeImporter, NodeImporter};
-use io::pattern::InitPattern;
 use regex::{Captures, Regex};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
@@ -68,7 +67,6 @@ fn import_vertex_file(
     let file = File::open(path).expect("There was a problem reading the vertices file.");
     let re = Regex::new(format).unwrap();
     let mut has_n_type = true;
-
     // collect the column names as they get recognized
     let mut column_names: Vec<&str> = re.capture_names().map(|x| x.unwrap_or("")).collect();
     column_names.remove(0);
@@ -83,14 +81,13 @@ fn import_vertex_file(
     // Iterate over every line
     for (i, line) in BufReader::new(file).lines().enumerate() {
         let line_text = line.unwrap_or("".to_string());
-
         let line_string = String::from(line_text);
         let caps: Captures;
 
         // Handle lines that are empty or do not fit in the expression
         if let Some(x) = re.captures(&line_string) {
             caps = re.captures(&line_string).unwrap();
-            println!("{:?}",caps);
+            println!("{:?}", caps);
             // Parse the line into the relation table
             parse_line(&caps, &mut importer, column_names.to_vec(), i, has_n_type);
         } else {
@@ -136,24 +133,14 @@ fn import_edge_file(path: &str, uuid_map: &HashMap<u32, Uuid>, format: &str) -> 
     Ok(true)
 }
 
-pub fn import_files(file_info: InitPattern) -> Result<(), &'static str> {
+pub fn import_files(paths: [&str; 2], patterns: [&str; 2]) -> Result<(), &'static str> {
     let mut uuid_map: HashMap<u32, Uuid> = HashMap::new();
     let e: bool;
     let v: bool;
 
-    // Convert name vectors to hashmaps
-    let mut n_names: HashMap<&str, &str> = HashMap::with_capacity(file_info.n_names.len());
-    let mut e_names: HashMap<&str, &str> = HashMap::with_capacity(file_info.e_names.len());
-    file_info.n_names.iter().map(|x| n_names.insert(x.0, x.1));
-    file_info.e_names.iter().map(|x| e_names.insert(x.0, x.1));
     // Call separate importers
-    v = import_vertex_file(
-        file_info.file_path[0],
-        &mut uuid_map,
-        file_info.expression[0],
-    )
-    .unwrap();
-    e = import_edge_file(file_info.file_path[1], &uuid_map, file_info.expression[1]).unwrap();
+    v = import_vertex_file(paths[0], &mut uuid_map, patterns[0]).unwrap();
+    e = import_edge_file(paths[1], &uuid_map, patterns[1]).unwrap();
 
     // Error Checking
     if e && v {

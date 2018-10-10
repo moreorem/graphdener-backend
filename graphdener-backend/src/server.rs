@@ -22,7 +22,6 @@ impl Service for Echo {
             "import" => import_paths(
                 params[0].as_array().expect("expected array"),
                 params[1].as_array().expect("expected array"),
-                params[2].as_map().expect("expected dictionary"),
             ),
             "newgraph" => initialize_graph(&mut self.0),
             "populate" => populate_graph(params[0].as_u64().expect("expected id"), &mut self.0),
