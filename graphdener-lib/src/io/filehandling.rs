@@ -37,7 +37,6 @@ fn parse_line<T: Import>(
         } else {
             clean_name = name;
         }
-
         let data: ParsedColumn = match clean_name {
             "n_id" | "e_id" | "e_from" | "e_to" | "e_weight" => {
                 ParsedColumn::Numeric(caps[*name].parse::<u32>().expect("n_id is not numeric!"))

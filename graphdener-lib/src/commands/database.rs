@@ -103,7 +103,8 @@ pub fn create_edges(source: Uuid, t: String, target: Uuid) -> () {
 
 pub fn create_vertices(pair: (Uuid, String)) -> Result<bool, Error> {
     let trans = statics::DATASTORE.transaction().unwrap();
-    let v = Vertex::with_id(pair.0, Type::new(pair.1).unwrap());
+    println!("{:?}", pair);
+    let v = Vertex::with_id(pair.0, Type::new(pair.1).unwrap()); // FIXME: Error prone
     trans.create_vertex(&v)
 }
 
