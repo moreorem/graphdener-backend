@@ -54,7 +54,8 @@ impl Import for EdgeImporter {
             }
             "e_type" => {
                 if let ParsedColumn::Text(x) = data {
-                    self.type_list.push((line, x))
+                    self.type_list.push((line, x));
+
                 } else {
                     panic!("unknown type type");
                 }
@@ -107,6 +108,7 @@ impl EdgeImporter {
                 self.type_list[i].1.to_owned(),
                 *uuid_map.get(&id[1]).unwrap(),
             );
+
             database::create_edges(from, t, to);
         }
 
@@ -128,11 +130,6 @@ impl EdgeImporter {
                 );
             }
         }
-
-        // TESTME: debugging
-        // let msg = database::get_edge_metadata(None, "e_label".to_string(), None);
-        // let msg = database::get_graph_edges(None);
-        // println!("{:?}", msg);
     }
 }
 
@@ -197,11 +194,9 @@ impl NodeImporter {
     // Nodes Step 2
     pub fn generate_id_map(&mut self, uuid_map: &mut HashMap<u32, Uuid>) -> () {
         let mut a: Vec<u32> = Vec::new();
-
         for id in self.node_list.iter() {
             a.push(*id);
         }
-
         a.sort();
         a.dedup();
 
@@ -217,7 +212,6 @@ impl NodeImporter {
 
         // PENDING: Combine two following loops into one
         for (id, t) in self.type_list.iter() {
-            // data.push((*uuid_map.get(id).unwrap(), t.to_owned()));
             database::create_vertices((*uuid_map.get(id).unwrap(), t.to_owned()));
         }
 

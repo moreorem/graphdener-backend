@@ -86,7 +86,6 @@ fn import_vertex_file(
         // Handle lines that are empty or do not fit in the expression
         if let Some(x) = re.captures(&line_string) {
             caps = re.captures(&line_string).unwrap();
-            println!("{:?}", caps);
             // Parse the line into the relation table
             parse_line(&caps, &mut importer, column_names.to_vec(), i, has_n_type);
         } else {

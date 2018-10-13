@@ -17,10 +17,9 @@ pub fn apply_force_directed(
     container: &mut GraphContainer,
     parameters: &Vec<Value>,
 ) -> Result<Value, Value> {
+    println!("Applying Force Directed Distribution...");
     let params = parameters.into_iter().map(|x| x.as_f64().unwrap() as f32);
     let p: Vec<f32> = params.collect();
-    println!("Applying Force Directed Distribution...");
-    println!("{}", id);
     let id: u8 = id as u8;
     let mut graph = &mut container.get_mut_graph(id);
     forcedirected::force_directed(&mut graph, p[0], p[1], p[2], p[3]);

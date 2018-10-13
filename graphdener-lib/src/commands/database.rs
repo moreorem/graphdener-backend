@@ -95,6 +95,7 @@ pub fn get_vertex_metadata(uuid: Option<Uuid>, name: &str) -> Result<Vec<VertexM
 
 pub fn create_edges(source: Uuid, t: String, target: Uuid) -> () {
     let trans = statics::DATASTORE.transaction().unwrap();
+    println!("{:?}", t);
     let tp = Type::new(t).unwrap();
     let e = EdgeKey::new(target, tp, source);
 
