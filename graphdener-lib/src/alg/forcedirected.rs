@@ -27,10 +27,8 @@ fn repulsion(mut nodes: &mut Vec<Node>, repulsive_force: f32) -> () {
     let n = nodes.len();
     // repulsion between all pairs
     for i1 in 0..n - 2 {
-        // let mut node1 = &mut nodes[i1];
         let pos1 = nodes[i1].pos.get();
         for i2 in i1 + 1..n - 1 {
-            // let mut node2 = &mut nodes[i2];
 
             let pos2 = nodes[i2].pos.get();
 
@@ -56,29 +54,30 @@ fn repulsion(mut nodes: &mut Vec<Node>, repulsive_force: f32) -> () {
 // Spring force between adjactent pairs
 fn spring(nodes: &mut Vec<Node>, spring_constant: f32, spring_rest_length: f32) -> () {
     let n = nodes.len();
-    let mut node1: Node;
-    let mut node2: Node;
     let mut pos1: [f64; 2];
     let mut pos2: [f64; 2];
     let mut distance: f32;
 
     for i1 in 0..n - 1 {
         pos1 = nodes[i1].pos.get();
-        for i2 in nodes[i1].clone().neighbors.iter() {
-            pos2 = nodes[*i2].pos.get();
-            if i1 < *i2 {
-                let (dx, dy) = ((pos2[0] - pos1[0]) as f32, (pos2[1] - pos1[1]) as f32);
-                if dx != 0.0 || dy != 0.0 {
-                    distance = (dx.powf(2.0) + dy.powf(2.0)).sqrt();
-                    let force = spring_constant * (distance - spring_rest_length);
-                    let fx = force * dx / distance;
-                    let fy = force * dy / distance;
+        if nodes[i1].neighbors.len() > 0 {
+            for j in 0..nodes[i1].neighbors.len() - 1 {
+                let i2 = nodes[i1].neighbors[j];
+                pos2 = nodes[i2].pos.get();
+                if i1 < i2 {
+                    let (dx, dy) = ((pos2[0] - pos1[0]) as f32, (pos2[1] - pos1[1]) as f32);
+                    if dx != 0.0 || dy != 0.0 {
+                        distance = (dx.powf(2.0) + dy.powf(2.0)).sqrt();
+                        let force = spring_constant * (distance - spring_rest_length);
+                        let fx = force * dx / distance;
+                        let fy = force * dy / distance;
 
-                    let force1 = nodes[i1].force.get();
-                    let force2 = nodes[*i2].force.get();
+                        let force1 = nodes[i1].force.get();
+                        let force2 = nodes[i2].force.get();
 
-                    nodes[i1].force.set(force1.0 + fx, force1.1 + fy);
-                    nodes[*i2].force.set(force2.0 - fx, force2.1 - fy);
+                        nodes[i1].force.set(force1.0 + fx, force1.1 + fy);
+                        nodes[i2].force.set(force2.0 - fx, force2.1 - fy);
+                    }
                 }
             }
         }
@@ -97,7 +96,7 @@ fn update(nodes: &mut Vec<Node>, deltat: f32, graph: &mut Graph) -> () {
             dx = dx * s;
             dy = dy * s;
         }
-        let pos = node.pos.get();
+         let pos = node.pos.get();
         node.pos.set(pos[0] + dx as f64, pos[1] + dy as f64);
         graph
             .get_mut_node(i)
