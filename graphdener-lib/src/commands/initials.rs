@@ -17,7 +17,7 @@ pub fn import_paths(
     // Send information to filehandling
     filehandling::import_files(converted_path, converted_pattern);
 
-    Ok(Value::from("paths imported"))
+    Ok(Value::from(true))
 }
 
 // Initializes new graph. Activates when we want to draw an extra graph on a new canvas

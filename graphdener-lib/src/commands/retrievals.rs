@@ -99,7 +99,6 @@ fn edge_info(info_type: &str, draft_model: Vec<Edge>) -> Value {
     // return the array of specific detail type for all of the selected vertices according to the command
     match info_type {
         "type" => Value::Array(r_iter.map(|x| Value::from(x.key.t.0.to_owned())).collect()),
-        // "pos" => Value::Array(get_adj_list() ),
         "label" => Value::Array(get_e_attribute("label")),
         "weight" => Value::Array(get_e_attribute("weight")),
         _ => Value::from("error"),
