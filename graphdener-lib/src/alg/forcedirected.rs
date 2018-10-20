@@ -2,6 +2,7 @@ use models::graph::Graph;
 use models::nodes::Node;
 use std::thread;
 use std::time::Duration;
+use std::time::Instant;
 
 // TODO: Improve speed using arrayfire or threads
 const MAX_DISPLACEMENT_SQUARED: f32 = 56.0;
@@ -11,6 +12,7 @@ const MAX_DISPLACEMENT_SQUARED: f32 = 56.0;
 // delta_t = time step
 
 pub fn force_directed(graph: &mut Graph, l: f32, k_r: f32, k_s: f32, deltat: f32) -> () {
+    let instant = Instant::now();
     let mut nodes = graph.nodes.clone();
 
     // repulsion between all pairs
@@ -19,8 +21,8 @@ pub fn force_directed(graph: &mut Graph, l: f32, k_r: f32, k_s: f32, deltat: f32
     spring(&mut nodes, k_s, l);
 
     // update positions
-    update(&mut nodes, deltat, graph);
-    println!("Done applying force directed algorithm.");
+    update(nodes, deltat, graph);
+    println!("{:?}", instant.elapsed());
 }
 
 fn repulsion(mut nodes: &mut Vec<Node>, repulsive_force: f32) -> () {
@@ -29,7 +31,6 @@ fn repulsion(mut nodes: &mut Vec<Node>, repulsive_force: f32) -> () {
     for i1 in 0..n - 2 {
         let pos1 = nodes[i1].pos.get();
         for i2 in i1 + 1..n - 1 {
-
             let pos2 = nodes[i2].pos.get();
 
             let (dx, dy) = ((pos2[0] - pos1[0]) as f32, (pos2[1] - pos1[1]) as f32);
@@ -85,8 +86,7 @@ fn spring(nodes: &mut Vec<Node>, spring_constant: f32, spring_rest_length: f32) 
 }
 
 // Update positions
-fn update(nodes: &mut Vec<Node>, deltat: f32, graph: &mut Graph) -> () {
-    let n = nodes.len();
+fn update(mut nodes: Vec<Node>, deltat: f32, graph: &mut Graph) -> () {
     for (i, node) in nodes.iter_mut().enumerate() {
         let force = node.force.get();
         let (mut dx, mut dy) = (deltat * force.0, deltat * force.1);
@@ -96,11 +96,9 @@ fn update(nodes: &mut Vec<Node>, deltat: f32, graph: &mut Graph) -> () {
             dx = dx * s;
             dy = dy * s;
         }
-         let pos = node.pos.get();
-        node.pos.set(pos[0] + dx as f64, pos[1] + dy as f64);
         graph
             .get_mut_node(i)
             .pos
-            .set(node.pos.get()[0], node.pos.get()[1]);
+            .set(node.pos.get()[0] + dx as f64, node.pos.get()[1] + dy as f64);
     }
 }
