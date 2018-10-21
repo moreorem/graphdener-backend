@@ -12,7 +12,7 @@ const MAX_DISPLACEMENT_SQUARED: f32 = 56.0;
 // delta_t = time step
 
 pub fn force_directed(graph: &mut Graph, l: f32, k_r: f32, k_s: f32, deltat: f32) -> () {
-    let instant = Instant::now();
+    // let instant = Instant::now();
     let mut nodes = graph.nodes.clone();
 
     // repulsion between all pairs
@@ -22,7 +22,7 @@ pub fn force_directed(graph: &mut Graph, l: f32, k_r: f32, k_s: f32, deltat: f32
 
     // update positions
     update(nodes, deltat, graph);
-    println!("{:?}", instant.elapsed());
+    // println!("{:?}", instant.elapsed());
 }
 
 fn repulsion(mut nodes: &mut Vec<Node>, repulsive_force: f32) -> () {
